@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=2]
 
-[ext_resource path="res://characters/template/TemplateCharacter.gd" type="Script" id=1]
+[ext_resource path="res://characters/template/template.gd" type="Script" id=1]
 [ext_resource path="res://characters/template/spritesheet.png" type="Texture" id=2]
 
 [sub_resource type="CapsuleShape" id=1]
@@ -74,5 +74,5 @@ offset = Vector2( -2, 40 )
 texture = ExtResource( 2 )
 vframes = 14
 hframes = 10
-frame = 1
+frame = 5
 
