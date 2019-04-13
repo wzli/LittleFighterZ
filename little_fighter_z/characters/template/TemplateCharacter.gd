@@ -1,7 +1,7 @@
-extends KinematicBody2D
+extends KinematicBody
 
-const WALK_SPEED = 100
-var velocity = Vector2()
+export var walk_speed: float = 1
+var velocity = Vector3()
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -11,20 +11,21 @@ func _ready():
 func _physics_process(delta):
 	velocity.x = 0
 	velocity.y = 0
+	velocity.z = 0
 	
 	if Input.is_action_pressed("ui_right"):
-		velocity.x = WALK_SPEED
+		velocity.x = walk_speed
 	elif Input.is_action_pressed("ui_left"):
-		velocity.x = -WALK_SPEED
+		velocity.x = -walk_speed
 		
 	if Input.is_action_pressed("ui_up"):
-		velocity.y = -WALK_SPEED
+		velocity.z = -walk_speed
 	elif Input.is_action_pressed("ui_down"):
-		velocity.y = WALK_SPEED
+		velocity.z = walk_speed
 	
-	if velocity.x == 0 and velocity.y == 0:
+	if velocity.x == 0 and velocity.z == 0:
 		$AnimationPlayer.play("Rest")
 	else:
 		$AnimationPlayer.play("Walk")
-	$Sprite.flip_h = velocity.x < 0
+	$Sprite3D.flip_h = velocity.x < 0
 	velocity = move_and_slide(velocity)

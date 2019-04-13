@@ -18,5 +18,5 @@ margin_bottom = 14.0
 text = "Little Fighter Z"
 
 [node name="TemplateCharacter" parent="." instance=ExtResource( 1 )]
-position = Vector2( 229.873, 97.59 )
+position = Vector2( 251.873, 171.59 )
 
