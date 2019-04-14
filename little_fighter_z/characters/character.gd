@@ -4,7 +4,7 @@ class_name Character
 
 export var walk_speed: float = 1
 
-enum Action {UP, DOWN, LEFT, RIGHT, ATTACK, DEFEND, JUMP}
+enum Action {MOVE, ATTACK, DEFEND, JUMP}
 enum State {REST, WALK, RUN, PAIN}
 
 var velocity := Vector3()
