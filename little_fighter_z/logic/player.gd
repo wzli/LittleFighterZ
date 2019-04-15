@@ -49,8 +49,7 @@ func add_combo_key():
 	
 func _unhandled_key_input(event : InputEventKey):
 	if combo_timer.wait_time - combo_timer.time_left < 0.05:
-		combo_timer.start()
-		return
+		combo_code = Character.ComboKey.NONE
 	if not add_combo_key():
 	    return
 	combo_timer.start()

@@ -2,8 +2,8 @@ extends KinematicBody
 
 class_name Character
 
-export(float) var walk_speed: float = 1
-export(float) var run_speed: float = 3
+export(float) var walk_speed: float = 2
+export(float) var run_speed: float = 4
 
 enum ComboKey {NONE, UP, DOWN, LEFT, RIGHT, ATTACK, DEFEND, JUMP}
 
