@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://Camera.gd" type="Script" id=1]
 [ext_resource path="res://logic/player.tscn" type="PackedScene" id=2]
+[ext_resource path="res://characters/bandit/bandit.tscn" type="PackedScene" id=3]
 
 [sub_resource type="SpatialMaterial" id=1]
 albedo_color = Color( 0.239216, 0.227451, 0.419608, 1 )
@@ -22,4 +23,5 @@ mesh = SubResource( 2 )
 material/0 = null
 
 [node name="Player" parent="." instance=ExtResource( 2 )]
+character_scene = ExtResource( 3 )
 

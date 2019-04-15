@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://characters/character.gd" type="Script" id=1]
 [ext_resource path="res://characters/spritesheet.png" type="Texture" id=2]
@@ -42,6 +42,23 @@ tracks/0/keys = {
 }
 
 [sub_resource type="Animation" id=4]
+resource_name = "Run"
+length = 0.8
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite3D:frame")
+tracks/0/interp = 0
+tracks/0/loop_wrap = false
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.2, 0.4, 0.6 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 20, 21, 22, 21 ]
+}
+
+[sub_resource type="Animation" id=5]
 length = 1.2
 loop = true
 tracks/0/type = "value"
@@ -57,7 +74,7 @@ tracks/0/keys = {
 "values": [ 4, 5, 6, 7, 6, 5 ]
 }
 
-[sub_resource type="SpatialMaterial" id=5]
+[sub_resource type="SpatialMaterial" id=6]
 flags_transparent = true
 flags_unshaded = true
 params_billboard_mode = 1
@@ -73,12 +90,14 @@ shape = SubResource( 1 )
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 anims/Pain = SubResource( 2 )
 anims/Rest = SubResource( 3 )
-anims/Walk = SubResource( 4 )
+anims/Run = SubResource( 4 )
+anims/Walk = SubResource( 5 )
 
 [node name="Sprite3D" type="Sprite3D" parent="."]
-material_override = SubResource( 5 )
+material_override = SubResource( 6 )
 offset = Vector2( -4, 80 )
 texture = ExtResource( 2 )
 vframes = 14
 hframes = 10
+frame = 20
 
