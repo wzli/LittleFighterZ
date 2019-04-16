@@ -4,80 +4,96 @@ class_name Character
 
 export(float) var walk_speed: float = 2.5
 export(float) var run_speed: float = 5
+export(float) var double_jump_time_window : float = 0.75
 export(Vector2) var jump_velocity := Vector2(4, 11)
+export(Vector2) var dash_velocity := Vector2(8, 8)
 export(float) var gravity : float = -30
 
-enum State {REST, WALK, RUN, JUMP, PAIN}
+enum State {WALK, RUN, JUMP, DASH, PAIN}
 
-onready var animation_player := $AnimationPlayer as AnimationPlayer
 onready var sprite_3d := $Sprite3D as Sprite3D
+onready var animation_player := $AnimationPlayer as AnimationPlayer
+onready var dash_land_duration := animation_player.get_animation("DashLand").length
 
-var state : int = State.REST
+var state : int = State.WALK
 var velocity := Vector3()
 var velocity_request := Vector3()
+var double_jump_trigger := false
 
 func _ready():
 	animation_player.play("Rest")
 
 func _physics_process(delta : float):
+	velocity.y += gravity * delta
 	match state:
-		State.REST:
-			if velocity_request.x != 0 or velocity_request.z != 0:
-				change_state(State.WALK)
 		State.WALK:
 			if velocity_request.x == 0 and velocity_request.z == 0:
-				change_state(State.REST)
+				if animation_player.current_animation == "Walk":
+					animation_player.play("Rest")
 			else:
+				if animation_player.current_animation == "Rest":
+					animation_player.play("Walk")
 				velocity = move_and_slide(velocity_request.normalized() * walk_speed, Vector3.UP)
 		State.RUN:
 			velocity_request.x = sign(velocity.x)
 			velocity = move_and_slide(velocity_request.normalized() * run_speed, Vector3.UP)
 		State.JUMP:
+			velocity = move_and_slide(velocity, Vector3.UP)
 			if is_on_floor() and velocity.y < jump_velocity.y:
+				velocity = velocity_request.normalized() * walk_speed
 				animation_player.play_backwards("Jump")
-			else:
-				velocity.y += gravity * delta
-				velocity = move_and_slide(velocity, Vector3.UP)
+		State.DASH:
+			velocity = move_and_slide(velocity, Vector3.UP)
+			if is_on_floor():
+				change_state(State.WALK)
+			elif (velocity.y + 0.5 * gravity * dash_land_duration) * dash_land_duration + translation.y < 0:
+				animation_player.play("DashLand")
 	match state:
-		State.REST, State.WALK:
+		State.WALK, State.JUMP:
 			if velocity_request.x != 0 or velocity_request.z != 0:
 				if velocity_request.x < 0:
 					sprite_3d.flip_h = true
 				elif velocity_request.x > 0:
 					sprite_3d.flip_h = false
-		State.RUN:
+		State.RUN, State.DASH:
 			sprite_3d.flip_h = velocity.x < 0
+
 
 func _on_AnimationPlayer_animation_finished(anim_name : String):
 	match anim_name:
 		"Jump":
 			match state:
-				State.REST, State.WALK: 
+				State.WALK: 
 					velocity = velocity_request.normalized() * jump_velocity.x
 					velocity.y += jump_velocity.y
 					change_state(State.JUMP)
 				State.JUMP:
-					if velocity_request.x == 0 && velocity_request.z == 0: 
-						change_state(State.REST)
+					if double_jump_trigger and not (velocity.x == 0 and velocity_request.x == 0):
+						velocity = velocity.normalized() * dash_velocity.x
+						if velocity.x == 0 and velocity.z == 0:
+							velocity = velocity_request.normalized() * dash_velocity.x
+						velocity.y = dash_velocity.y
+						animation_player.play("DashJump")
+						change_state(State.DASH)
 					else:
 						change_state(State.WALK)
+			double_jump_trigger = false
+
 
 func change_state(new_state : int) -> void:
 	if state == new_state:
 		return
 	match new_state:
-		State.REST:
-		    animation_player.play("Rest")
 		State.WALK:
-			animation_player.play("Walk")
+			if velocity_request.x == 0 and velocity_request.z == 0:
+				animation_player.play("Rest")
+			else:
+				animation_player.play("Walk")
 		State.RUN:
 			animation_player.play("Run")
-		State.JUMP:
-			pass
 		State.PAIN:
 			animation_player.play("Pain")
 	state = new_state
-	print(animation_player.assigned_animation)
 
 func input_combo(combo : String) -> void:
 	if combo[0] == 'D':
@@ -111,8 +127,6 @@ func input_combo(combo : String) -> void:
 
 func _combo_walk(combo : String) -> void:
 	match state:
-		State.REST:
-			change_state(State.WALK)
 		State.RUN:
 			if (combo[-1] == '<' and velocity.x > 0) or \
 					(combo[-1] == '>' and velocity.x < 0):
@@ -120,7 +134,7 @@ func _combo_walk(combo : String) -> void:
 
 func _combo_run(combo : String) -> void:
 	match state:
-		State.REST, State.WALK, State.RUN:
+		State.WALK, State.RUN:
 			match combo[-1]:
 				'<':
 					velocity = Vector3.LEFT
@@ -128,7 +142,17 @@ func _combo_run(combo : String) -> void:
 					velocity = Vector3.RIGHT
 			change_state(State.RUN)
 			
+			
 func _combo_jump(combo : String) -> void:
 	match state:
-		State.REST, State.WALK:
+		State.WALK:
 			animation_player.play("Jump")
+		State.RUN:
+			if velocity.x != 0:
+				velocity = velocity.normalized() * dash_velocity.x
+			velocity.y = dash_velocity.y
+			animation_player.play("DashJump")
+			change_state(State.DASH)
+		State.JUMP:
+			if (dash_velocity.y + 0.5 * gravity * double_jump_time_window) * double_jump_time_window + translation.y < 0:
+				double_jump_trigger = true
