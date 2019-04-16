@@ -7,7 +7,9 @@ export(bool) var print_combo := false
 onready var character := character_scene.instance() as Character
 onready var combo_timer := $ComboTimer as Timer
 
-var combo_code : int = Character.ComboKey.NONE
+enum ComboKey {NONE, UP, DOWN, LEFT, RIGHT, ATTACK, DEFEND, JUMP}
+var combo_code : int = ComboKey.NONE
+var combo : String = '___'
 
 func _ready(): 
 	add_child(character)
@@ -24,19 +26,22 @@ func _physics_process(delta : float):
 		character.velocity_request.z += 1
 
 func _unhandled_key_input(event : InputEventKey):
-	if combo_timer.wait_time - combo_timer.time_left < 0.05:
-		combo_code = Character.ComboKey.NONE
-	if not add_combo_key():
-	    return
+	var combo_key := parse_combo_key(event)
+	var prev_combo_key := combo_code & 0x7
+	match combo_key:
+		ComboKey.LEFT, ComboKey.RIGHT:
+			pass
+		ComboKey.NONE, prev_combo_key:
+			return
 	combo_timer.start()
-	combo_code = combo_code & 0x1FF
-	character.input_combo(combo_code)
+	combo_code = (combo_code << 3) | combo_key
+	parse_combo(combo_code) 
+	character.input_combo(combo)
 	if print_combo:
-		print("%d %s: %s" % [input_id, name, combo_string(combo_code)])
-	combo_code = (combo_code << 3)
+		print("%d %s: %s" % [input_id, name, combo])
 
 func _on_ComboTimer_timeout():
-	combo_code = Character.ComboKey.NONE
+	combo_code = ComboKey.NONE
 
 func set_character(new_character_scene : PackedScene) -> bool:
 	var new_character := new_character_scene.instance() as Character
@@ -48,44 +53,41 @@ func set_character(new_character_scene : PackedScene) -> bool:
 	add_child(character)
 	return true
 
-func add_combo_key() -> bool:
-	if Input.is_action_pressed(str(input_id) + "_attack"):
-		combo_code += Character.ComboKey.ATTACK
-	elif Input.is_action_pressed(str(input_id) + "_defend"):
-		combo_code += Character.ComboKey.DEFEND
-	elif Input.is_action_pressed(str(input_id) + "_jump"):
-		combo_code += Character.ComboKey.JUMP
-	elif Input.is_action_pressed(str(input_id) + "_up"):
-		combo_code += Character.ComboKey.UP
-	elif Input.is_action_pressed(str(input_id) + "_down"):
-		combo_code += Character.ComboKey.DOWN
-	elif Input.is_action_pressed(str(input_id) + "_left"):
-		combo_code += Character.ComboKey.LEFT
-	elif Input.is_action_pressed(str(input_id) + "_right"):
-		combo_code += Character.ComboKey.RIGHT
+func parse_combo_key(event : InputEventKey) -> int:
+	if event.is_action_pressed(str(input_id) + "_attack"):
+		return ComboKey.ATTACK
+	elif event.is_action_pressed(str(input_id) + "_defend"):
+		return ComboKey.DEFEND
+	elif event.is_action_pressed(str(input_id) + "_jump"):
+		return ComboKey.JUMP
+	elif event.is_action_pressed(str(input_id) + "_up"):
+		return ComboKey.UP
+	elif event.is_action_pressed(str(input_id) + "_down"):
+		return ComboKey.DOWN
+	elif event.is_action_pressed(str(input_id) + "_left"):
+		return ComboKey.LEFT
+	elif event.is_action_pressed(str(input_id) + "_right"):
+		return ComboKey.RIGHT
 	else:
-	    return false
-	return true
+	    return ComboKey.NONE
 
-func combo_string(combo_code : int) -> String:
-	var combo_string := "???"
-	for i in range(3):
+func parse_combo(combo_code : int) -> void:
+	for i in range(2, -1, -1):
 		match combo_code & 0x7:
-			Character.ComboKey.NONE:
-				combo_string[i] = '_'
-			Character.ComboKey.UP:
-				combo_string[i] = '^'
-			Character.ComboKey.DOWN:
-				combo_string[i] = 'v'
-			Character.ComboKey.LEFT:
-				combo_string[i] = '<'
-			Character.ComboKey.RIGHT:
-				combo_string[i] = '>'
-			Character.ComboKey.Attack:
-				combo_string[i] = 'A'
-			Character.ComboKey.DEFEND:
-				combo_string[i] = 'D'
-			Character.ComboKey.JUMP:
-				combo_string[i] = 'J'
+			ComboKey.UP:
+				combo[i] = '^'
+			ComboKey.DOWN:
+				combo[i] = 'v'
+			ComboKey.LEFT:
+				combo[i] = '<'
+			ComboKey.RIGHT:
+				combo[i] = '>'
+			ComboKey.ATTACK:
+				combo[i] = 'A'
+			ComboKey.DEFEND:
+				combo[i] = 'D'
+			ComboKey.JUMP:
+				combo[i] = 'J'
+			ComboKey.NONE, _:
+				combo[i] = '_'
 		combo_code = combo_code >> 3
-	return combo_string

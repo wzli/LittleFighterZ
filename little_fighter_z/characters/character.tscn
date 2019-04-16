@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://characters/character.gd" type="Script" id=1]
 [ext_resource path="res://characters/spritesheet.png" type="Texture" id=2]
@@ -6,6 +6,23 @@
 [sub_resource type="CapsuleShape" id=1]
 radius = 0.4
 height = 0.4
+
+[sub_resource type="Animation" id=7]
+resource_name = "Jump"
+length = 0.14
+step = 0.01
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite3D:frame")
+tracks/0/interp = 0
+tracks/0/loop_wrap = false
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.07, 0.14 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 1,
+"values": [ 60, 61, 62 ]
+}
 
 [sub_resource type="Animation" id=2]
 resource_name = "Pain"
@@ -87,6 +104,7 @@ transform = Transform( 1, 0, 0, 0, -4.37114e-008, -1, 0, 1, -4.37114e-008, 0, 0.
 shape = SubResource( 1 )
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+anims/Jump = SubResource( 7 )
 anims/Pain = SubResource( 2 )
 anims/Rest = SubResource( 3 )
 anims/Run = SubResource( 4 )
@@ -98,5 +116,5 @@ offset = Vector2( -4, 80 )
 texture = ExtResource( 2 )
 vframes = 14
 hframes = 10
-frame = 1
 
+[connection signal="animation_finished" from="AnimationPlayer" to="." method="_on_AnimationPlayer_animation_finished"]
