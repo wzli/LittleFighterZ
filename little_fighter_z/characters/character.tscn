@@ -98,5 +98,5 @@ offset = Vector2( -4, 80 )
 texture = ExtResource( 2 )
 vframes = 14
 hframes = 10
-frame = 20
+frame = 1
 

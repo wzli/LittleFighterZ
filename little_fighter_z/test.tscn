@@ -24,4 +24,5 @@ material/0 = null
 
 [node name="Player" parent="." instance=ExtResource( 2 )]
 character_scene = ExtResource( 3 )
+print_combo = true
 
