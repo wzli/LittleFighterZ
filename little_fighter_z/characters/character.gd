@@ -4,7 +4,7 @@ class_name Character
 
 export(float) var walk_speed: float = 2.5
 export(float) var run_speed: float = 5
-export(float) var double_jump_time_window : float = 0.75
+export(float) var double_jump_time_window : float = 0.3
 export(Vector2) var jump_velocity := Vector2(4, 11)
 export(Vector2) var dash_velocity := Vector2(8, 8)
 export(float) var gravity : float = -30
@@ -39,7 +39,7 @@ func _physics_process(delta : float):
 			velocity = move_and_slide(velocity_request.normalized() * run_speed, Vector3.UP)
 		State.JUMP:
 			velocity = move_and_slide(velocity, Vector3.UP)
-			if is_on_floor() and velocity.y < jump_velocity.y:
+			if is_on_floor() and not animation_player.is_playing():
 				velocity = velocity_request.normalized() * walk_speed
 				animation_player.play_backwards("Jump")
 		State.DASH:
@@ -58,27 +58,22 @@ func _physics_process(delta : float):
 		State.RUN, State.DASH:
 			sprite_3d.flip_h = velocity.x < 0
 
-
 func _on_AnimationPlayer_animation_finished(anim_name : String):
 	match anim_name:
 		"Jump":
-			match state:
-				State.WALK: 
-					velocity = velocity_request.normalized() * jump_velocity.x
-					velocity.y += jump_velocity.y
-					change_state(State.JUMP)
-				State.JUMP:
-					if double_jump_trigger and not (velocity.x == 0 and velocity_request.x == 0):
-						velocity = velocity.normalized() * dash_velocity.x
-						if velocity.x == 0 and velocity.z == 0:
-							velocity = velocity_request.normalized() * dash_velocity.x
-						velocity.y = dash_velocity.y
-						animation_player.play("DashJump")
-						change_state(State.DASH)
-					else:
-						change_state(State.WALK)
+			if animation_player.current_animation_position > 0: 
+				velocity = velocity_request.normalized() * jump_velocity.x
+				velocity.y += jump_velocity.y
+			else:
+				if double_jump_trigger and not (velocity.x == 0 and velocity_request.x == 0):
+					velocity = velocity.normalized() * dash_velocity.x
+					if velocity.x == 0 and velocity.z == 0:
+						velocity = velocity_request.normalized() * dash_velocity.x
+					velocity.y += dash_velocity.y
+					change_state(State.DASH)
+				else:
+					change_state(State.WALK)
 			double_jump_trigger = false
-
 
 func change_state(new_state : int) -> void:
 	if state == new_state:
@@ -91,6 +86,10 @@ func change_state(new_state : int) -> void:
 				animation_player.play("Walk")
 		State.RUN:
 			animation_player.play("Run")
+		State.JUMP:
+			animation_player.play("Jump")
+		State.DASH:
+			animation_player.play("DashJump")
 		State.PAIN:
 			animation_player.play("Pain")
 	state = new_state
@@ -146,13 +145,12 @@ func _combo_run(combo : String) -> void:
 func _combo_jump(combo : String) -> void:
 	match state:
 		State.WALK:
-			animation_player.play("Jump")
+			change_state(State.JUMP)
 		State.RUN:
 			if velocity.x != 0:
 				velocity = velocity.normalized() * dash_velocity.x
-			velocity.y = dash_velocity.y
-			animation_player.play("DashJump")
+			velocity.y += dash_velocity.y
 			change_state(State.DASH)
 		State.JUMP:
-			if (dash_velocity.y + 0.5 * gravity * double_jump_time_window) * double_jump_time_window + translation.y < 0:
+			if (velocity.y + 0.5 * gravity * double_jump_time_window) * double_jump_time_window + translation.y < 0:
 				double_jump_trigger = true

@@ -7,7 +7,7 @@
 radius = 0.4
 height = 0.4
 
-[sub_resource type="Animation" id=9]
+[sub_resource type="Animation" id=2]
 resource_name = "DashJump"
 length = 0.001
 tracks/0/type = "value"
@@ -23,8 +23,7 @@ tracks/0/keys = {
 "values": [ 63 ]
 }
 
-[sub_resource type="Animation" id=2]
-resource_name = "DashLand"
+[sub_resource type="Animation" id=3]
 length = 0.15
 step = 0.01
 tracks/0/type = "value"
@@ -40,8 +39,7 @@ tracks/0/keys = {
 "values": [ 112, 113, 114 ]
 }
 
-[sub_resource type="Animation" id=3]
-resource_name = "Jump"
+[sub_resource type="Animation" id=4]
 length = 0.14
 step = 0.01
 tracks/0/type = "value"
@@ -57,7 +55,7 @@ tracks/0/keys = {
 "values": [ 60, 61, 62 ]
 }
 
-[sub_resource type="Animation" id=4]
+[sub_resource type="Animation" id=5]
 length = 1.5
 loop = true
 tracks/0/type = "value"
@@ -73,7 +71,7 @@ tracks/0/keys = {
 "values": [ 120, 121, 122, 121, 122 ]
 }
 
-[sub_resource type="Animation" id=5]
+[sub_resource type="Animation" id=6]
 length = 0.8
 loop = true
 step = 0.2
@@ -90,7 +88,7 @@ tracks/0/keys = {
 "values": [ 0, 1, 2, 3 ]
 }
 
-[sub_resource type="Animation" id=6]
+[sub_resource type="Animation" id=7]
 length = 0.8
 loop = true
 tracks/0/type = "value"
@@ -106,7 +104,7 @@ tracks/0/keys = {
 "values": [ 20, 21, 22, 21 ]
 }
 
-[sub_resource type="Animation" id=7]
+[sub_resource type="Animation" id=8]
 length = 1.2
 loop = true
 tracks/0/type = "value"
@@ -122,7 +120,7 @@ tracks/0/keys = {
 "values": [ 4, 5, 6, 7, 6, 5 ]
 }
 
-[sub_resource type="SpatialMaterial" id=8]
+[sub_resource type="SpatialMaterial" id=9]
 flags_transparent = true
 flags_unshaded = true
 params_billboard_mode = 1
@@ -135,20 +133,20 @@ transform = Transform( 1, 0, 0, 0, -4.37114e-008, -1, 0, 1, -4.37114e-008, 0, 0.
 shape = SubResource( 1 )
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-anims/DashJump = SubResource( 9 )
-anims/DashLand = SubResource( 2 )
-anims/Jump = SubResource( 3 )
-anims/Pain = SubResource( 4 )
-anims/Rest = SubResource( 5 )
-anims/Run = SubResource( 6 )
-anims/Walk = SubResource( 7 )
+anims/DashJump = SubResource( 2 )
+anims/DashLand = SubResource( 3 )
+anims/Jump = SubResource( 4 )
+anims/Pain = SubResource( 5 )
+anims/Rest = SubResource( 6 )
+anims/Run = SubResource( 7 )
+anims/Walk = SubResource( 8 )
 
 [node name="Sprite3D" type="Sprite3D" parent="."]
-material_override = SubResource( 8 )
+material_override = SubResource( 9 )
 offset = Vector2( -4, 80 )
 texture = ExtResource( 2 )
 vframes = 14
 hframes = 10
-frame = 3
+frame = 62
 
 [connection signal="animation_finished" from="AnimationPlayer" to="." method="_on_AnimationPlayer_animation_finished"]
