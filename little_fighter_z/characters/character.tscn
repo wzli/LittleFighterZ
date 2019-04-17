@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=2]
+[gd_scene load_steps=14 format=2]
 
 [ext_resource path="res://characters/character.gd" type="Script" id=1]
 [ext_resource path="res://characters/spritesheet.png" type="Texture" id=2]
@@ -23,8 +23,24 @@ tracks/0/keys = {
 "values": [ 63 ]
 }
 
+[sub_resource type="Animation" id=10]
+resource_name = "DashJumpReverse"
+length = 0.001
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite3D:frame")
+tracks/0/interp = 0
+tracks/0/loop_wrap = false
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 64 ]
+}
+
 [sub_resource type="Animation" id=3]
-length = 0.3
+length = 0.2
 step = 0.01
 tracks/0/type = "value"
 tracks/0/path = NodePath("Sprite3D:frame")
@@ -33,10 +49,27 @@ tracks/0/loop_wrap = false
 tracks/0/imported = false
 tracks/0/enabled = true
 tracks/0/keys = {
-"times": PoolRealArray( 0, 0.1, 0.2 ),
-"transitions": PoolRealArray( 1, 1, 1 ),
+"times": PoolRealArray( 0, 0.15 ),
+"transitions": PoolRealArray( 1, 1 ),
 "update": 1,
-"values": [ 112, 113, 114 ]
+"values": [ 112, 60 ]
+}
+
+[sub_resource type="Animation" id=11]
+resource_name = "DashLandReverse"
+length = 0.2
+step = 0.05
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite3D:frame")
+tracks/0/interp = 0
+tracks/0/loop_wrap = false
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.15 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ 64, 60 ]
 }
 
 [sub_resource type="Animation" id=4]
@@ -134,7 +167,9 @@ shape = SubResource( 1 )
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 anims/DashJump = SubResource( 2 )
+anims/DashJumpReverse = SubResource( 10 )
 anims/DashLand = SubResource( 3 )
+anims/DashLandReverse = SubResource( 11 )
 anims/Jump = SubResource( 4 )
 anims/Pain = SubResource( 5 )
 anims/Rest = SubResource( 6 )

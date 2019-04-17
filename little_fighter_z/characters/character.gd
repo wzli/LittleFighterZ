@@ -13,7 +13,7 @@ export(Vector2) var dash_velocity := Vector2(8, 8)
 export(float) var double_jump_time_window : float = 0.2
 export(float) var gravity : float = -30
 export(float) var input_angle : float = PI
-export(bool) var classic_mode : bool = true
+export(bool) var classic_mode : bool = false
 
 enum State {WALK, RUN, JUMP, DASH, PAIN}
 
@@ -54,21 +54,37 @@ func _physics_process(delta : float):
 			if is_on_floor():
 				velocity = Vector3.ZERO
 				change_state(State.WALK)
-			elif (velocity.y + 0.5 * gravity * dash_land_duration) * dash_land_duration + translation.y < 0:
-				animation_player.play("DashLand")
+					
+	var scalar_control_direction := scalar_direction(control_direction)
+	var scalar_velocity_direction := scalar_direction(velocity)
 	match state:
 		State.WALK, State.JUMP:
-			set_sprite_direction(control_direction)
-		State.RUN, State.DASH:
-			set_sprite_direction(velocity)
+			if scalar_control_direction != 0:
+				sprite_3d.flip_h = scalar_control_direction < 0
+		State.RUN:
+			if scalar_velocity_direction != 0:
+				sprite_3d.flip_h = scalar_velocity_direction < 0
+		State.DASH:
+			if (velocity.y + 0.5 * gravity * dash_land_duration) * dash_land_duration + translation.y < 0:
+				if animation_player.assigned_animation.match("*Reverse"):
+					animation_player.play("DashLandReverse")
+				else:
+					animation_player.play("DashLand")
+			elif scalar_control_direction != 0 and scalar_velocity_direction != 0:
+				if (scalar_control_direction < 0) != (scalar_velocity_direction < 0):
+					sprite_3d.flip_h = scalar_control_direction < 0
+					animation_player.play("DashJumpReverse")
+				else:
+					sprite_3d.flip_h = scalar_velocity_direction < 0
+					animation_player.play("DashJump")
+			elif scalar_velocity_direction == 0:
+				sprite_3d.flip_h = scalar_control_direction < 0
+				
 
-func set_sprite_direction(direction : Vector3) -> void:
-	if direction.x != 0 or direction.z != 0:
-		var local_x := direction.rotated(Vector3.UP, -input_angle).x
-		if local_x < 0:
-			sprite_3d.flip_h = true
-		elif local_x > 0:
-			sprite_3d.flip_h = false
+func scalar_direction(direction : Vector3) -> float:
+	if direction.x == 0 and direction.z == 0:
+		return 0.0
+	return direction.dot(Vector3.RIGHT.rotated(Vector3.UP, input_angle))
 	
 func _on_AnimationPlayer_animation_finished(anim_name : String):
 	match anim_name:
