@@ -24,6 +24,10 @@ config/name="LittleFighterZ"
 run/main_scene="res://test.tscn"
 config/icon="res://icon.png"
 
+[autoload]
+
+global="*res://logic/global.gd"
+
 [input]
 
 0_up={

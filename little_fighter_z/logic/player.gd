@@ -15,21 +15,22 @@ func _ready():
 	add_child(character)
 
 func _physics_process(delta : float):
-	character.velocity_request = Vector3.ZERO
+	character.control_direction = Vector3.ZERO
 	if Input.is_action_pressed(str(input_id) + "_left"):
-		character.velocity_request.x -= 1
+		character.control_direction.x -= 1
 	elif Input.is_action_pressed(str(input_id) + "_right"):
-		character.velocity_request.x += 1
+		character.control_direction.x += 1
 	if Input.is_action_pressed(str(input_id) + "_up"):
-		character.velocity_request.z -= 1
+		character.control_direction.z -= 1
 	elif Input.is_action_pressed(str(input_id) + "_down"):
-		character.velocity_request.z += 1
+		character.control_direction.z += 1
+	character.control_direction = character.control_direction.normalized().rotated(Vector3.UP, character.input_angle)
 
 func _unhandled_key_input(event : InputEventKey):
 	var combo_key := parse_combo_key(event)
 	var prev_combo_key := combo_code & 0x7
 	match combo_key:
-		ComboKey.LEFT, ComboKey.RIGHT:
+		ComboKey.LEFT, ComboKey.RIGHT, ComboKey.UP, ComboKey.DOWN:
 			pass
 		ComboKey.NONE, prev_combo_key:
 			return
@@ -43,15 +44,13 @@ func _unhandled_key_input(event : InputEventKey):
 func _on_ComboTimer_timeout():
 	combo_code = ComboKey.NONE
 
-func set_character(new_character_scene : PackedScene) -> bool:
+func set_character(new_character_scene : PackedScene) -> void:
 	var new_character := new_character_scene.instance() as Character
-	if not new_character:
-		return false
+	assert(new_character)
 	character.queue_free()
 	character = new_character
 	character_scene = new_character_scene
 	add_child(character)
-	return true
 
 func parse_combo_key(event : InputEventKey) -> int:
 	if event.is_action_pressed(str(input_id) + "_attack"):

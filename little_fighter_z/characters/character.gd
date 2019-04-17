@@ -4,10 +4,16 @@ class_name Character
 
 export(float) var walk_speed: float = 2.5
 export(float) var run_speed: float = 5
-export(float) var double_jump_time_window : float = 0.3
+export(float) var run_curve : float = 0.1
+
 export(Vector2) var jump_velocity := Vector2(4, 11)
 export(Vector2) var dash_velocity := Vector2(8, 8)
+
+#To do: move to globals
+export(float) var double_jump_time_window : float = 0.2
 export(float) var gravity : float = -30
+export(float) var input_angle : float = PI
+export(bool) var classic_mode : bool = true
 
 enum State {WALK, RUN, JUMP, DASH, PAIN}
 
@@ -17,7 +23,7 @@ onready var dash_land_duration := animation_player.get_animation("DashLand").len
 
 var state : int = State.WALK
 var velocity := Vector3()
-var velocity_request := Vector3()
+var control_direction := Vector3()
 var double_jump := Vector3()
 
 func _ready():
@@ -27,16 +33,17 @@ func _physics_process(delta : float):
 	velocity.y += gravity * delta
 	match state:
 		State.WALK:
-			if velocity_request.x == 0 and velocity_request.z == 0:
-				if animation_player.current_animation == "Walk":
-					animation_player.play("Rest")
+			if control_direction.x == 0 and control_direction.z == 0:
+				animation_player.play("Rest")
 			else:
-				if animation_player.current_animation == "Rest":
-					animation_player.play("Walk")
-				velocity = move_and_slide(velocity_request.normalized() * walk_speed, Vector3.UP)
+				animation_player.play("Walk")
+				velocity = move_and_slide(control_direction * walk_speed, Vector3.UP)
 		State.RUN:
-			velocity_request.x = sign(velocity.x)
-			velocity = move_and_slide(velocity_request.normalized() * run_speed, Vector3.UP)
+			if classic_mode:
+				velocity = velocity.project(Vector3.RIGHT.rotated(Vector3.UP, input_angle)).normalized()
+				velocity = move_and_slide((velocity + control_direction).normalized() * run_speed, Vector3.UP)
+			else:
+				velocity = move_and_slide((velocity + run_curve * control_direction).normalized() * run_speed, Vector3.UP)
 		State.JUMP:
 			velocity = move_and_slide(velocity, Vector3.UP)
 			if is_on_floor() and not animation_player.is_playing():
@@ -45,25 +52,30 @@ func _physics_process(delta : float):
 		State.DASH:
 			velocity = move_and_slide(velocity, Vector3.UP)
 			if is_on_floor():
+				velocity = Vector3.ZERO
 				change_state(State.WALK)
 			elif (velocity.y + 0.5 * gravity * dash_land_duration) * dash_land_duration + translation.y < 0:
 				animation_player.play("DashLand")
 	match state:
 		State.WALK, State.JUMP:
-			if velocity_request.x != 0 or velocity_request.z != 0:
-				if velocity_request.x < 0:
-					sprite_3d.flip_h = true
-				elif velocity_request.x > 0:
-					sprite_3d.flip_h = false
+			set_sprite_direction(control_direction)
 		State.RUN, State.DASH:
-			sprite_3d.flip_h = velocity.x < 0
+			set_sprite_direction(velocity)
 
+func set_sprite_direction(direction : Vector3) -> void:
+	if direction.x != 0 or direction.z != 0:
+		var local_x := direction.rotated(Vector3.UP, -input_angle).x
+		if local_x < 0:
+			sprite_3d.flip_h = true
+		elif local_x > 0:
+			sprite_3d.flip_h = false
+	
 func _on_AnimationPlayer_animation_finished(anim_name : String):
 	match anim_name:
 		"Jump":
 			if animation_player.current_animation_position > 0: 
 				velocity.y = 0
-				velocity = velocity_request.normalized() * jump_velocity.x
+				velocity = control_direction * jump_velocity.x
 				velocity.y = jump_velocity.y
 			else:
 				if double_jump.y > 0:
@@ -77,11 +89,6 @@ func change_state(new_state : int) -> void:
 	if state == new_state:
 		return
 	match new_state:
-		State.WALK:
-			if velocity_request.x == 0 and velocity_request.z == 0:
-				animation_player.play("Rest")
-			else:
-				animation_player.play("Walk")
 		State.RUN:
 			animation_player.play("Run")
 		State.JUMP:
@@ -91,7 +98,7 @@ func change_state(new_state : int) -> void:
 		State.PAIN:
 			animation_player.play("Pain")
 	state = new_state
-
+	
 func input_combo(combo : String) -> void:
 	if combo[0] == 'D':
 		match combo.right(1):
@@ -111,6 +118,8 @@ func input_combo(combo : String) -> void:
 				pass
 	elif combo.match('*<<') or combo.match('*>>'):
 		_combo_run(combo)
+	elif not classic_mode and (combo.match('*^^') or combo.match('*vv')):
+		_combo_run(combo)
 	else:
 		match combo[-1]:
 			'A':
@@ -125,24 +134,33 @@ func input_combo(combo : String) -> void:
 func _combo_walk(combo : String) -> void:
 	match state:
 		State.RUN:
-			if (combo[-1] == '<' and velocity.x > 0) or \
-					(combo[-1] == '>' and velocity.x < 0):
-				change_state(State.WALK)
+			var local_angle := Vector2(velocity.x, velocity.z).angle() - input_angle + (2 * PI)
+			if ((combo[-1] == '<' and (local_angle < 0.25 * PI or local_angle > 1.75 * PI))
+					or (combo[-1] == '^' and (local_angle > 0.25 * PI and local_angle < 0.75 * PI))
+					or (combo[-1] == '>' and (local_angle > 0.75 * PI and local_angle < 1.25 * PI))
+					or (combo[-1] == 'v' and (local_angle > 1.25 * PI and local_angle < 1.75 * PI))):
+						velocity = Vector3.ZERO
+						change_state(State.WALK)
 
 func _combo_run(combo : String) -> void:
 	match state:
 		State.WALK, State.RUN:
 			match combo[-1]:
 				'<':
-					velocity = Vector3.LEFT
+					velocity = Vector3.LEFT.rotated(Vector3.UP, input_angle)
 				'>':
-					velocity = Vector3.RIGHT
+					velocity = Vector3.RIGHT.rotated(Vector3.UP, input_angle)
+				'^':
+					velocity = Vector3.FORWARD.rotated(Vector3.UP, input_angle)
+				'v':
+					velocity = Vector3.BACK.rotated(Vector3.UP, input_angle)
 			change_state(State.RUN)
 			
 			
 func _combo_jump(combo : String) -> void:
 	match state:
 		State.WALK:
+			velocity = Vector3.ZERO
 			change_state(State.JUMP)
 		State.RUN:
 			velocity = velocity.normalized() * dash_velocity.x
@@ -150,11 +168,11 @@ func _combo_jump(combo : String) -> void:
 			change_state(State.DASH)
 		State.JUMP:
 			if (velocity.y + 0.5 * gravity * double_jump_time_window) * double_jump_time_window + translation.y < 0:
-				if velocity_request.x == 0 and velocity_request.z == 0 :
+				if control_direction.x == 0 and control_direction.z == 0 :
 					double_jump = velocity
 				else:
-					double_jump = velocity_request
-			if abs(double_jump.x) > 0.01:
+					double_jump = control_direction
+			if abs(double_jump.x) > 0.01 or (not classic_mode and abs(double_jump.z) > 0.01):
 				double_jump.y = 0
 				double_jump = double_jump.normalized() * dash_velocity.x
 				double_jump.y = dash_velocity.y
