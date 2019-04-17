@@ -18,7 +18,7 @@ onready var dash_land_duration := animation_player.get_animation("DashLand").len
 var state : int = State.WALK
 var velocity := Vector3()
 var velocity_request := Vector3()
-var double_jump_trigger := false
+var double_jump := Vector3()
 
 func _ready():
 	animation_player.play("Rest")
@@ -40,7 +40,7 @@ func _physics_process(delta : float):
 		State.JUMP:
 			velocity = move_and_slide(velocity, Vector3.UP)
 			if is_on_floor() and not animation_player.is_playing():
-				velocity = velocity_request.normalized() * walk_speed
+				velocity = Vector3.ZERO
 				animation_player.play_backwards("Jump")
 		State.DASH:
 			velocity = move_and_slide(velocity, Vector3.UP)
@@ -62,18 +62,16 @@ func _on_AnimationPlayer_animation_finished(anim_name : String):
 	match anim_name:
 		"Jump":
 			if animation_player.current_animation_position > 0: 
+				velocity.y = 0
 				velocity = velocity_request.normalized() * jump_velocity.x
-				velocity.y += jump_velocity.y
+				velocity.y = jump_velocity.y
 			else:
-				if double_jump_trigger and not (velocity.x == 0 and velocity_request.x == 0):
-					velocity = velocity.normalized() * dash_velocity.x
-					if velocity.x == 0 and velocity.z == 0:
-						velocity = velocity_request.normalized() * dash_velocity.x
-					velocity.y += dash_velocity.y
+				if double_jump.y > 0:
+					velocity = double_jump
+					double_jump = Vector3.ZERO
 					change_state(State.DASH)
 				else:
 					change_state(State.WALK)
-			double_jump_trigger = false
 
 func change_state(new_state : int) -> void:
 	if state == new_state:
@@ -147,10 +145,16 @@ func _combo_jump(combo : String) -> void:
 		State.WALK:
 			change_state(State.JUMP)
 		State.RUN:
-			if velocity.x != 0:
-				velocity = velocity.normalized() * dash_velocity.x
-			velocity.y += dash_velocity.y
+			velocity = velocity.normalized() * dash_velocity.x
+			velocity.y = dash_velocity.y
 			change_state(State.DASH)
 		State.JUMP:
 			if (velocity.y + 0.5 * gravity * double_jump_time_window) * double_jump_time_window + translation.y < 0:
-				double_jump_trigger = true
+				if velocity_request.x == 0 and velocity_request.z == 0 :
+					double_jump = velocity
+				else:
+					double_jump = velocity_request
+			if abs(double_jump.x) > 0.01:
+				double_jump.y = 0
+				double_jump = double_jump.normalized() * dash_velocity.x
+				double_jump.y = dash_velocity.y
