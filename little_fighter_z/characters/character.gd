@@ -30,8 +30,8 @@ const DASH_STATE := 3
 var states := [WalkState.new(), RunState.new(), JumpState.new(), DashState.new()]
 var state := WALK_STATE
 
-func transition(new_state : int) -> void:
-	states[new_state]._transition_setup()
+func transition(new_state : int, param = null) -> void:
+	states[new_state]._transition_setup(param)
 	state = new_state
 
 func _init():
@@ -137,7 +137,7 @@ func input_combo(combo : String) -> void:
 
 class BaseState:
 	var chr : Character
-	func _transition_setup() -> void:
+	func _transition_setup(param) -> void:
 		pass
 	func _physics_process(delta : float) -> void:
 		pass
@@ -173,7 +173,7 @@ class BaseState:
 
 class WalkState extends BaseState:
 	
-	func _transition_setup() -> void:
+	func _transition_setup(param) -> void:
 		chr.velocity = Vector3.ZERO
 
 	func _physics_process(delta : float) -> void:
@@ -187,6 +187,14 @@ class WalkState extends BaseState:
 				chr.sprite_3d.flip_h = scalar_control_direction < 0
 	
 	func _run(dir : int) -> void:
+		chr.transition(RUN_STATE, dir)
+		
+	func _jump() -> void:
+		chr.transition(JUMP_STATE)
+
+class RunState extends BaseState:
+	
+	func _transition_setup(dir : int) -> void:
 		match dir:
 			LEFT_DIR:
 				chr.velocity = Vector3.LEFT.rotated(Vector3.UP, chr.input_angle)
@@ -196,14 +204,6 @@ class WalkState extends BaseState:
 				chr.velocity = Vector3.FORWARD.rotated(Vector3.UP, chr.input_angle)
 			DOWN_DIR:
 				chr.velocity = Vector3.BACK.rotated(Vector3.UP, chr.input_angle)
-		chr.transition(RUN_STATE)
-		
-	func _jump() -> void:
-		chr.transition(JUMP_STATE)
-
-class RunState extends BaseState:
-	
-	func _transition_setup() -> void:
 		chr.animation_player.play("Run")
 		chr.set_sprite_direction(chr.velocity)
 		
@@ -224,14 +224,12 @@ class RunState extends BaseState:
 						chr.transition(WALK_STATE)
 						
 	func _jump() -> void:
-		chr.velocity = chr.velocity.normalized() * chr.dash_velocity.x
-		chr.velocity.y = chr.dash_velocity.y
-		chr.transition(DASH_STATE)
+		chr.transition(DASH_STATE, chr.velocity)
 		
 class JumpState extends BaseState:
 	var double_jump := Vector3()
 	
-	func _transition_setup() -> void:
+	func _transition_setup(param) -> void:
 		chr.velocity = Vector3.ZERO
 		chr.animation_player.play("Jump")
 		
@@ -252,9 +250,8 @@ class JumpState extends BaseState:
 			chr.velocity.y = chr.jump_velocity.y
 		else:
 			if double_jump.y > 0:
-				chr.velocity = double_jump
+				chr.transition(DASH_STATE, double_jump)
 				double_jump = Vector3.ZERO
-				chr.transition(DASH_STATE)
 			else:
 				chr.transition(WALK_STATE)
 				
@@ -265,13 +262,14 @@ class JumpState extends BaseState:
 			else:
 				double_jump = chr.control_direction
 		if abs(double_jump.x) > 0.01 or (not chr.classic_mode and abs(double_jump.z) > 0.01):
-			double_jump.y = 0
-			double_jump = double_jump.normalized() * chr.dash_velocity.x
-			double_jump.y = chr.dash_velocity.y
+			double_jump.y = 1
 				
 class DashState extends BaseState:
 	
-	func _transition_setup() -> void:
+	func _transition_setup(dir_vector : Vector3) -> void:
+		dir_vector.y = 0
+		chr.velocity = dir_vector.normalized() * chr.dash_velocity.x
+		chr.velocity.y = chr.dash_velocity.y
 		chr.animation_player.play("DashJump")
 		
 	func _physics_process(delta : float) -> void:
