@@ -9,7 +9,7 @@ onready var combo_timer := $ComboTimer as Timer
 
 enum ComboKey {NONE, UP, DOWN, LEFT, RIGHT, ATTACK, DEFEND, JUMP}
 var combo_code : int = ComboKey.NONE
-var combo : String = '___'
+var combo : String = '____'
 
 func _ready(): 
 	add_child(character)
@@ -30,7 +30,7 @@ func _unhandled_key_input(event : InputEventKey):
 	var combo_key := parse_combo_key(event)
 	var prev_combo_key := combo_code & 0x7
 	match combo_key:
-		ComboKey.LEFT, ComboKey.RIGHT, ComboKey.UP, ComboKey.DOWN:
+		ComboKey.DEFEND, ComboKey.LEFT, ComboKey.RIGHT, ComboKey.UP, ComboKey.DOWN:
 			pass
 		ComboKey.NONE, prev_combo_key:
 			return
@@ -71,7 +71,7 @@ func parse_combo_key(event : InputEventKey) -> int:
 	    return ComboKey.NONE
 
 func parse_combo(combo_code : int) -> void:
-	for i in range(2, -1, -1):
+	for i in range(3, -1, -1):
 		match combo_code & 0x7:
 			ComboKey.UP:
 				combo[i] = '^'
