@@ -70,16 +70,16 @@ func _physics_process(delta : float):
 					animation_player.play("DashLandReverse")
 				else:
 					animation_player.play("DashLand")
-			elif scalar_control_direction != 0 and scalar_velocity_direction != 0:
-				if (scalar_control_direction < 0) != (scalar_velocity_direction < 0):
+			elif scalar_control_direction != 0:
+				if scalar_velocity_direction == 0:
 					sprite_3d.flip_h = scalar_control_direction < 0
-					animation_player.play("DashJumpReverse")
 				else:
-					sprite_3d.flip_h = scalar_velocity_direction < 0
-					animation_player.play("DashJump")
-			elif scalar_velocity_direction == 0:
-				sprite_3d.flip_h = scalar_control_direction < 0
-				
+					if (scalar_control_direction < 0) != (scalar_velocity_direction < 0):
+						sprite_3d.flip_h = scalar_control_direction < 0
+						animation_player.play("DashJumpReverse")
+					else:
+						sprite_3d.flip_h = scalar_velocity_direction < 0
+						animation_player.play("DashJump")
 
 func scalar_direction(direction : Vector3) -> float:
 	if direction.x == 0 and direction.z == 0:
