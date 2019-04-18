@@ -21,145 +21,162 @@ onready var dash_land_duration := animation_player.get_animation("DashLand").len
 
 var velocity := Vector3()
 var control_direction := Vector3()
-var double_jump := Vector3()
-var state = WalkState
+
+enum {UP_DIR, DOWN_DIR, LEFT_DIR, RIGHT_DIR}
+const WALK_STATE := 0
+const RUN_STATE := 1
+const JUMP_STATE := 2
+const DASH_STATE := 3
+var states := [WalkState.new(), RunState.new(), JumpState.new(), DashState.new()]
+var state := WALK_STATE
+
+func transition(new_state : int) -> void:
+	states[new_state]._transition_setup()
+	state = new_state
+
+func _init():
+	for state_obj in states:
+		state_obj.chr = self
 
 func _physics_process(delta : float) -> void:
-	#velocity.y += gravity * delta
-	state._physics_process(self, delta)
+	states[state]._physics_process(delta)
+	
+func _animation_finished(anim_name : String) -> void:
+	states[state]._animation_finished(anim_name)
 
 func scalar_direction(direction : Vector3) -> float:
 	if direction.x == 0 and direction.z == 0:
 		return 0.0
 	return direction.dot(Vector3.RIGHT.rotated(Vector3.UP, input_angle))
 	
+func set_sprite_direction(direction : Vector3) -> void:
+	var scalar_direction := scalar_direction(direction)
+	if scalar_direction != 0:
+		sprite_3d.flip_h = scalar_direction < 0
+	
 func input_combo(combo : String) -> void:
 	if combo[1] == 'D':
 		if classic_mode:
 			match combo.right(2):
 				'JA', 'AJ':
-					state._defend_attack_jump_combo(self)
+					states[state]._defend_attack_jump_combo()
 				'^A', 'A^':
-					state._up_attack_combo(self)
+					states[state]._up_attack_combo()
 				'vA', 'Av':
-					state._down_attack_combo(self)
+					states[state]._down_attack_combo()
 				'^J', 'J^':
-					state._up_jump_combo(self)
+					states[state]._up_jump_combo()
 				'vJ', 'Jv':
-					state._down_jump_combo(self)
+					states[state]._down_jump_combo()
 				'<A', 'A<':
-					state._side_attack_combo(self, BaseState.LEFT_DIR)
+					states[state]._side_attack_combo(LEFT_DIR)
 				'>A', 'A>':
-					state._side_attack_combo(self, BaseState.RIGHT_DIR)
+					states[state]._side_attack_combo(RIGHT_DIR)
 				'<J', 'J<':
-					state._side_jump_combo(self, BaseState.LEFT_DIR)
+					states[state]._side_jump_combo(LEFT_DIR)
 				'>J', 'J>':
-					state._side_jump_combo(self, BaseState.RIGHT_DIR)
+					states[state]._side_jump_combo(RIGHT_DIR)
 		else:
 			match combo.right(2):
 				'JA', 'AJ':
-					state._defend_attack_jump_combo(self)
+					states[state]._defend_attack_jump_combo()
 				'^A', 'A^':
 					if combo[0] == 'D':
-						state._up_attack_combo(self)
+						states[state]._up_attack_combo()
 					else:
-						state._side_attack_combo(self, BaseState.UP_DIR)
+						states[state]._side_attack_combo(UP_DIR)
 				'vA', 'Av':
 					if combo[0] == 'D':
-						state._down_attack_combo(self)
+						states[state]._down_attack_combo()
 					else:
-						state._side_attack_combo(self, BaseState.DOWN_DIR)
+						states[state]._side_attack_combo(DOWN_DIR)
 				'<A', 'A<':
-					state._side_attack_combo(self, BaseState.LEFT_DIR)
+					states[state]._side_attack_combo(LEFT_DIR)
 				'>A', 'A>':
-					state._side_attack_combo(self, BaseState.RIGHT_DIR)
+					states[state]._side_attack_combo(RIGHT_DIR)
 				'^J', 'J^':
 					if combo[0] == 'D':
-						state._up_jump_combo(self)
+						states[state]._up_jump_combo()
 					else:
-						state._side_jump_combo(self, BaseState.UP_DIR)
+						states[state]._side_jump_combo(UP_DIR)
 				'vJ', 'Jv':
 					if combo[0] == 'D':
-						state._down_jump_combo(self)
+						states[state]._down_jump_combo()
 					else:
-						state._side_jump_combo(self, BaseState.DOWN_DIR)
+						states[state]._side_jump_combo(DOWN_DIR)
 				'<J', 'J<':
-					state._side_jump_combo(self, BaseState.LEFT_DIR)
+					states[state]._side_jump_combo(LEFT_DIR)
 				'>J', 'J>':
-					state._side_jump_combo(self, BaseState.RIGHT_DIR)
-	elif state._custom_combo(self, combo):
+					states[state]._side_jump_combo(RIGHT_DIR)
+	elif states[state]._custom_combo(combo):
 		pass
 	elif not classic_mode and combo.match('*^^'):
-		state._run(self, BaseState.UP_DIR)
+		states[state]._run(UP_DIR)
 	elif not classic_mode and combo.match('*vv'):
-		state._run(self, BaseState.DOWN_DIR)
+		states[state]._run(DOWN_DIR)
 	elif combo.match('*<<'):
-		state._run(self, BaseState.LEFT_DIR)
+		states[state]._run(LEFT_DIR)
 	elif combo.match('*>>'):
-		state._run(self, BaseState.RIGHT_DIR)
+		states[state]._run(RIGHT_DIR)
 	else:
 		match combo[-1]:
 			'A':
-				state._attack(self)
+				states[state]._attack()
 			'J':
-				state._jump(self)
+				states[state]._jump()
 			'D':
-				state._defend(self)
+				states[state]._defend()
 			'^':
-				state._move(self, BaseState.UP_DIR)
+				states[state]._move(UP_DIR)
 			'v':
-				state._move(self, BaseState.DOWN_DIR)
+				states[state]._move(DOWN_DIR)
 			'<':
-				state._move(self, BaseState.LEFT_DIR)
+				states[state]._move(LEFT_DIR)
 			'>':
-				state._move(self, BaseState.RIGHT_DIR)
-
-func transition(new_state) -> void:
-	new_state._transition_setup(self)
-	state = new_state
+				states[state]._move(RIGHT_DIR)
 
 class BaseState:
-	enum {UP_DIR, DOWN_DIR, LEFT_DIR, RIGHT_DIR}
-	static func _transition_setup(chr : Character) -> void:
+	var chr : Character
+	func _transition_setup() -> void:
 		pass
-	static func _physics_process(chr : Character, delta : float) -> void:
+	func _physics_process(delta : float) -> void:
 		pass
-	static func _animation_finished(chr : Character, anim_name : String) -> void:
+	func _animation_finished(anim_name : String) -> void:
 		pass
-	static func _move(chr : Character, dir : int) -> void:
+	func _move(dir : int) -> void:
 		pass
-	static func _run(chr : Character, dir : int) -> void:
+	func _run(dir : int) -> void:
 		pass
-	static func _attack(chr : Character) -> void:
+	func _attack() -> void:
 		pass
-	static func _jump(chr : Character) -> void:
+	func _jump() -> void:
 		pass
-	static func _defend(chr : Character) -> void:
+	func _defend() -> void:
 		pass
-	static func _side_attack_combo(chr : Character, dir : int) -> void:
+	func _side_attack_combo(dir : int) -> void:
 		pass
-	static func _side_jump_combo(chr : Character, dir : int) -> void:
+	func _side_jump_combo(dir : int) -> void:
 		pass
-	static func _up_attack_combo(chr : Character) -> void:
+	func _up_attack_combo() -> void:
 		pass
-	static func _up_jump_combo(chr : Character) -> void:
+	func _up_jump_combo() -> void:
 		pass
-	static func _down_attack_combo(chr : Character) -> void:
+	func _down_attack_combo() -> void:
 		pass
-	static func _down_jump_combo(chr : Character) -> void:
+	func _down_jump_combo() -> void:
 		pass
-	static func _defend_attack_jump_combo(chr : Character) -> void:
+	func _defend_attack_jump_combo() -> void:
 		pass
-	static func _custom_combo(chr : Character, combo : String) -> bool:
+	func _custom_combo(combo : String) -> bool:
 		# return true if combo was handled
 		return false
 
 class WalkState extends BaseState:
 	
-	static func _transition_setup(chr : Character) -> void:
+	func _transition_setup() -> void:
 		chr.velocity = Vector3.ZERO
 
-	static func _physics_process(chr : Character, delta : float) -> void:
+	func _physics_process(delta : float) -> void:
 		if chr.control_direction.x == 0 and chr.control_direction.z == 0:
 			chr.animation_player.play("Rest")
 		else:
@@ -169,7 +186,7 @@ class WalkState extends BaseState:
 		if scalar_control_direction != 0:
 				chr.sprite_3d.flip_h = scalar_control_direction < 0
 	
-	static func _run(chr : Character, dir : int) -> void:
+	func _run(dir : int) -> void:
 		match dir:
 			LEFT_DIR:
 				chr.velocity = Vector3.LEFT.rotated(Vector3.UP, chr.input_angle)
@@ -179,31 +196,103 @@ class WalkState extends BaseState:
 				chr.velocity = Vector3.FORWARD.rotated(Vector3.UP, chr.input_angle)
 			DOWN_DIR:
 				chr.velocity = Vector3.BACK.rotated(Vector3.UP, chr.input_angle)
-		chr.transition(RunState)
+		chr.transition(RUN_STATE)
+		
+	func _jump() -> void:
+		chr.transition(JUMP_STATE)
 
 class RunState extends BaseState:
 	
-	static func _transition_setup(chr : Character) -> void:
+	func _transition_setup() -> void:
 		chr.animation_player.play("Run")
-		set_sprite_direction(chr)
+		chr.set_sprite_direction(chr.velocity)
 		
-	static func _physics_process(chr : Character, delta : float) -> void:
+	func _physics_process(delta : float) -> void:
 		if chr.classic_mode:
 			chr.velocity = chr.velocity.project(Vector3.RIGHT.rotated(Vector3.UP, chr.input_angle)).normalized()
 			chr.velocity = chr.move_and_slide((chr.velocity + 0.99 * chr.control_direction).normalized() * chr.run_speed, Vector3.UP)
 		else:
 			chr.velocity = chr.move_and_slide((chr.velocity + chr.run_curve * chr.control_direction).normalized() * chr.run_speed, Vector3.UP)
-			set_sprite_direction(chr)
+			chr.set_sprite_direction(chr.velocity)
 			
-	static func _move(chr : Character, dir : int) -> void:
+	func _move(dir : int) -> void:
 		var local_angle := Vector2(chr.velocity.x, chr.velocity.z).angle() - chr.input_angle + (2 * PI)
 		if ((dir == LEFT_DIR and (local_angle < 0.25 * PI or local_angle > 1.75 * PI))
 					or (dir == UP_DIR and (local_angle > 0.25 * PI and local_angle < 0.75 * PI))
 					or (dir == RIGHT_DIR and (local_angle > 0.75 * PI and local_angle < 1.25 * PI))
 					or (dir == DOWN_DIR and (local_angle > 1.25 * PI and local_angle < 1.75 * PI))):
-						chr.transition(WalkState)
+						chr.transition(WALK_STATE)
+						
+	func _jump() -> void:
+		chr.velocity = chr.velocity.normalized() * chr.dash_velocity.x
+		chr.velocity.y = chr.dash_velocity.y
+		chr.transition(DASH_STATE)
 		
-	static func set_sprite_direction(chr : Character) -> void:
+class JumpState extends BaseState:
+	var double_jump := Vector3()
+	
+	func _transition_setup() -> void:
+		chr.velocity = Vector3.ZERO
+		chr.animation_player.play("Jump")
+		
+	func _physics_process(delta : float) -> void:
+		chr.velocity.y += chr.gravity * delta
+		chr.velocity = chr.move_and_slide(chr.velocity, Vector3.UP)
+		if chr.is_on_floor() and not chr.animation_player.is_playing():
+			chr.velocity = Vector3.ZERO
+			chr.animation_player.play_backwards("Jump")
+		chr.set_sprite_direction(chr.control_direction)
+		
+	func _animation_finished(anim_name : String) -> void:
+		if anim_name != "Jump":
+			return
+		if chr.animation_player.current_animation_position > 0: 
+			chr.velocity.y = 0
+			chr.velocity = chr.control_direction * chr.jump_velocity.x
+			chr.velocity.y = chr.jump_velocity.y
+		else:
+			if double_jump.y > 0:
+				chr.velocity = double_jump
+				double_jump = Vector3.ZERO
+				chr.transition(DASH_STATE)
+			else:
+				chr.transition(WALK_STATE)
+				
+	func _jump() -> void:
+		if (chr.velocity.y + 0.5 * chr.gravity * chr.double_jump_time_window) * chr.double_jump_time_window + chr.translation.y < 0:
+			if chr.control_direction.x == 0 and chr.control_direction.z == 0 :
+				double_jump = chr.velocity
+			else:
+				double_jump = chr.control_direction
+		if abs(double_jump.x) > 0.01 or (not chr.classic_mode and abs(double_jump.z) > 0.01):
+			double_jump.y = 0
+			double_jump = double_jump.normalized() * chr.dash_velocity.x
+			double_jump.y = chr.dash_velocity.y
+				
+class DashState extends BaseState:
+	
+	func _transition_setup() -> void:
+		chr.animation_player.play("DashJump")
+		
+	func _physics_process(delta : float) -> void:
+		chr.velocity.y += chr.gravity * delta
+		chr.velocity = chr.move_and_slide(chr.velocity, Vector3.UP)
+		if chr.is_on_floor():
+			chr.transition(WALK_STATE)
+		var scalar_control_direction := chr.scalar_direction(chr.control_direction)
 		var scalar_velocity_direction := chr.scalar_direction(chr.velocity)
-		if scalar_velocity_direction != 0:
-			chr.sprite_3d.flip_h = scalar_velocity_direction < 0
+		if (chr.velocity.y + 0.5 * chr.gravity * chr.dash_land_duration) * chr.dash_land_duration + chr.translation.y < 0:
+			if chr.animation_player.assigned_animation.match("*Reverse"):
+				chr.animation_player.play("DashLandReverse")
+			else:
+				chr.animation_player.play("DashLand")
+		elif scalar_control_direction != 0:
+			if scalar_velocity_direction == 0:
+				chr.sprite_3d.flip_h = scalar_control_direction < 0
+			else:
+				if (scalar_control_direction < 0) != (scalar_velocity_direction < 0):
+					chr.sprite_3d.flip_h = scalar_control_direction < 0
+					chr.animation_player.play("DashJumpReverse")
+				else:
+					chr.sprite_3d.flip_h = scalar_velocity_direction < 0
+					chr.animation_player.play("DashJump")

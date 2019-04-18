@@ -184,4 +184,4 @@ vframes = 14
 hframes = 10
 frame = 1
 
-[connection signal="animation_finished" from="AnimationPlayer" to="." method="_on_AnimationPlayer_animation_finished"]
+[connection signal="animation_finished" from="AnimationPlayer" to="." method="_animation_finished"]
