@@ -12,7 +12,7 @@ export(Vector2) var dash_velocity := Vector2(8, 8)
 #To do: move to globals
 export(float) var double_jump_time_window : float = 0.2
 export(float) var gravity : float = -30
-export(bool) var classic_mode : bool = true
+export(bool) var side_scroll_mode : bool = false
 
 onready var sprite_3d := $Sprite3D as Sprite3D
 onready var animation_player := $AnimationPlayer as AnimationPlayer
@@ -58,7 +58,7 @@ func set_sprite_direction(scalar_direction : float) -> void:
 	
 func input_combo(combo : String) -> void:
 	if combo[1] == 'D':
-		if classic_mode:
+		if side_scroll_mode:
 			match combo.right(2):
 				'JA', 'AJ':
 					states[state]._defend_attack_jump_combo()
@@ -112,9 +112,9 @@ func input_combo(combo : String) -> void:
 					states[state]._side_jump_combo(RIGHT_DIR)
 	elif states[state]._custom_combo(combo):
 		pass
-	elif not classic_mode and combo.match('*^^'):
+	elif not side_scroll_mode and combo.match('*^^'):
 		states[state]._run(UP_DIR)
-	elif not classic_mode and combo.match('*vv'):
+	elif not side_scroll_mode and combo.match('*vv'):
 		states[state]._run(DOWN_DIR)
 	elif combo.match('*<<'):
 		states[state]._run(LEFT_DIR)
@@ -195,6 +195,7 @@ class WalkState extends BaseState:
 		chr.transition(JUMP_STATE)
 
 class RunState extends BaseState:
+	const ONE_OVER_SQRT_TWO := 1/sqrt(2)
 	
 	func _transition_setup(direction_vector : Vector3) -> void:
 		chr.velocity = chr.to_global_basis(direction_vector)
@@ -202,15 +203,15 @@ class RunState extends BaseState:
 		chr.set_sprite_direction(direction_vector.x)
 		
 	func _physics_process(delta : float) -> void:
-		if chr.classic_mode:
+		if chr.side_scroll_mode:
 			chr.velocity = chr.velocity.project(chr.to_global_basis(Vector3.RIGHT)).normalized()
 			chr.velocity = chr.move_and_slide((chr.velocity + 0.99 * chr.to_global_basis(chr.control_direction)).normalized() * chr.run_speed, Vector3.UP)
 		else:
 			chr.velocity = chr.move_and_slide((chr.velocity + chr.run_curve * chr.to_global_basis(chr.control_direction)).normalized() * chr.run_speed, Vector3.UP)
-			chr.set_sprite_direction(chr.local_transform(chr.velocity).dot(Vector3.RIGHT))
+			chr.set_sprite_direction(chr.to_local_basis(chr.velocity).dot(Vector3.RIGHT))
 			
 	func _move(dir : int) -> void:
-		if chr.velocity.dot(chr.to_global_basis(chr.control_direction)) < 0:
+		if chr.velocity.normalized().dot(chr.to_global_basis(chr.control_direction)) < -ONE_OVER_SQRT_TWO:
 			chr.transition(WALK_STATE)
 						
 	func _jump() -> void:
@@ -251,7 +252,7 @@ class JumpState extends BaseState:
 				double_jump = chr.velocity
 			else:
 				double_jump = chr.to_global_basis(chr.control_direction)
-		if abs(double_jump.x) > 0.01 or (not chr.classic_mode and abs(double_jump.z) > 0.01):
+		if abs(double_jump.x) > 0.01 or (not chr.side_scroll_mode and abs(double_jump.z) > 0.01):
 			double_jump.y = 1
 				
 class DashState extends BaseState:
