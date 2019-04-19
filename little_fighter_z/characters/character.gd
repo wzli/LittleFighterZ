@@ -12,7 +12,6 @@ export(Vector2) var dash_velocity := Vector2(8, 8)
 #To do: move to globals
 export(float) var double_jump_time_window : float = 0.2
 export(float) var gravity : float = -30
-export(float) var input_angle : float = PI
 export(bool) var classic_mode : bool = true
 
 onready var sprite_3d := $Sprite3D as Sprite3D
@@ -47,7 +46,7 @@ func _animation_finished(anim_name : String) -> void:
 func scalar_direction(direction : Vector3) -> float:
 	if direction.x == 0 and direction.z == 0:
 		return 0.0
-	return direction.dot(Vector3.RIGHT.rotated(Vector3.UP, input_angle))
+	return direction.dot(global_transform.basis.xform_inv(Vector3.RIGHT))
 	
 func set_sprite_direction(direction : Vector3) -> void:
 	var scalar_direction := scalar_direction(direction)
@@ -197,31 +196,28 @@ class RunState extends BaseState:
 	func _transition_setup(dir : int) -> void:
 		match dir:
 			LEFT_DIR:
-				chr.velocity = Vector3.LEFT.rotated(Vector3.UP, chr.input_angle)
+				chr.velocity = chr.global_transform.basis.xform_inv(Vector3.LEFT)
 			RIGHT_DIR:
-				chr.velocity = Vector3.RIGHT.rotated(Vector3.UP, chr.input_angle)
+				chr.velocity = chr.global_transform.basis.xform_inv(Vector3.RIGHT)
 			UP_DIR:
-				chr.velocity = Vector3.FORWARD.rotated(Vector3.UP, chr.input_angle)
+				chr.velocity = chr.global_transform.basis.xform_inv(Vector3.FORWARD)
 			DOWN_DIR:
-				chr.velocity = Vector3.BACK.rotated(Vector3.UP, chr.input_angle)
+				chr.velocity = chr.global_transform.basis.xform_inv(Vector3.BACK)
 		chr.animation_player.play("Run")
 		chr.set_sprite_direction(chr.velocity)
 		
 	func _physics_process(delta : float) -> void:
 		if chr.classic_mode:
-			chr.velocity = chr.velocity.project(Vector3.RIGHT.rotated(Vector3.UP, chr.input_angle)).normalized()
+			chr.velocity = chr.velocity.project(chr.global_transform.basis.xform_inv(Vector3.RIGHT)).normalized()
 			chr.velocity = chr.move_and_slide((chr.velocity + 0.99 * chr.control_direction).normalized() * chr.run_speed, Vector3.UP)
 		else:
 			chr.velocity = chr.move_and_slide((chr.velocity + chr.run_curve * chr.control_direction).normalized() * chr.run_speed, Vector3.UP)
 			chr.set_sprite_direction(chr.velocity)
 			
 	func _move(dir : int) -> void:
-		var local_angle := Vector2(chr.velocity.x, chr.velocity.z).angle() - chr.input_angle + (2 * PI)
-		if ((dir == LEFT_DIR and (local_angle < 0.25 * PI or local_angle > 1.75 * PI))
-					or (dir == UP_DIR and (local_angle > 0.25 * PI and local_angle < 0.75 * PI))
-					or (dir == RIGHT_DIR and (local_angle > 0.75 * PI and local_angle < 1.25 * PI))
-					or (dir == DOWN_DIR and (local_angle > 1.25 * PI and local_angle < 1.75 * PI))):
-						chr.transition(WALK_STATE)
+		print(chr.velocity, chr.control_direction)
+		if chr.velocity.dot(chr.global_transform.basis.xform_inv(chr.control_direction)) < 0:
+			chr.transition(WALK_STATE)
 						
 	func _jump() -> void:
 		chr.transition(DASH_STATE, chr.velocity)

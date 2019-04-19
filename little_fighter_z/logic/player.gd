@@ -15,25 +15,15 @@ func _ready():
 	add_child(character)
 
 func _physics_process(delta : float):
-	character.control_direction = Vector3.ZERO
-	if Input.is_action_pressed(str(input_id) + "_left"):
-		character.control_direction.x -= 1
-	elif Input.is_action_pressed(str(input_id) + "_right"):
-		character.control_direction.x += 1
-	if Input.is_action_pressed(str(input_id) + "_up"):
-		character.control_direction.z -= 1
-	elif Input.is_action_pressed(str(input_id) + "_down"):
-		character.control_direction.z += 1
-	character.control_direction = character.control_direction.normalized().rotated(Vector3.UP, character.input_angle)
+	set_control_direction(Input)
 
 func _unhandled_key_input(event : InputEventKey):
 	var combo_key := parse_combo_key(event)
-	var prev_combo_key := combo_code & 0x7
 	match combo_key:
-		ComboKey.DEFEND, ComboKey.LEFT, ComboKey.RIGHT, ComboKey.UP, ComboKey.DOWN:
-			pass
-		ComboKey.NONE, prev_combo_key:
+		ComboKey.NONE:
 			return
+		ComboKey.UP, ComboKey.DOWN, ComboKey.LEFT, ComboKey.RIGHT:
+			set_control_direction(event)
 	combo_timer.start()
 	combo_code = (combo_code << 3) | combo_key
 	parse_combo(combo_code) 
@@ -51,6 +41,18 @@ func set_character(new_character_scene : PackedScene) -> void:
 	character = new_character
 	character_scene = new_character_scene
 	add_child(character)
+	
+func set_control_direction(input_event) -> void:
+	character.control_direction = Vector3.ZERO
+	if input_event.is_action_pressed(str(input_id) + "_left"):
+		character.control_direction.x -= 1
+	elif input_event.is_action_pressed(str(input_id) + "_right"):
+		character.control_direction.x += 1
+	if input_event.is_action_pressed(str(input_id) + "_up"):
+		character.control_direction.z -= 1
+	elif input_event.is_action_pressed(str(input_id) + "_down"):
+		character.control_direction.z += 1
+	character.control_direction = character.control_direction.normalized()
 
 func parse_combo_key(event : InputEventKey) -> int:
 	if event.is_action_pressed(str(input_id) + "_attack"):
