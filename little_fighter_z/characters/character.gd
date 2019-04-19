@@ -5,6 +5,7 @@ class_name Character
 export(float) var walk_speed: float = 2.5
 export(float) var run_speed: float = 5
 export(float) var run_curve : float = 0.1
+export(float) var brake_acceleration : float = 20
 
 export(Vector2) var jump_velocity := Vector2(4, 11)
 export(Vector2) var dash_velocity := Vector2(8, 8)
@@ -208,7 +209,13 @@ class RunState extends BaseState:
 		chr.set_sprite_direction(direction_vector.x)
 		
 	func _physics_process(delta : float) -> void:
-		if chr.side_scroll_mode:
+		if chr.animation_player.assigned_animation == "Brake":
+			var new_velocity := chr.velocity - chr.velocity.normalized() * chr.brake_acceleration * delta
+			if new_velocity.x * chr.velocity.x > 0:
+				chr.velocity = chr.move_and_slide(new_velocity, Vector3.UP)
+			else:
+				chr.transition(WALK_STATE)
+		elif chr.side_scroll_mode:
 			chr.velocity = chr.velocity.project(chr.to_global_basis(Vector3.RIGHT)).normalized()
 			chr.velocity = chr.move_and_slide((chr.velocity + 0.99 * chr.to_global_basis(chr.control_direction)).normalized() * chr.run_speed, Vector3.UP)
 		else:
@@ -217,7 +224,7 @@ class RunState extends BaseState:
 			
 	func _move(dir : int) -> void:
 		if chr.velocity.normalized().dot(chr.to_global_basis(chr.control_direction)) < -ONE_OVER_SQRT_TWO:
-			chr.transition(WALK_STATE)
+			chr.animation_player.play("Brake")
 						
 	func _jump() -> void:
 		chr.transition(DASH_STATE, chr.velocity)
@@ -238,8 +245,6 @@ class JumpState extends BaseState:
 		chr.set_sprite_direction(chr.control_direction.x)
 		
 	func _animation_finished(anim_name : String) -> void:
-		if anim_name != "Jump":
-			return
 		if chr.animation_player.current_animation_position > 0: 
 			chr.velocity.y = 0
 			chr.velocity = chr.to_global_basis(chr.control_direction) * chr.jump_velocity.x

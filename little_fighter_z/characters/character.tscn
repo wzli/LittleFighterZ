@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=2]
+[gd_scene load_steps=15 format=2]
 
 [ext_resource path="res://characters/character.gd" type="Script" id=1]
 [ext_resource path="res://characters/spritesheet.png" type="Texture" id=2]
@@ -8,7 +8,21 @@ radius = 0.4
 height = 0.4
 
 [sub_resource type="Animation" id=2]
-resource_name = "DashJump"
+resource_name = "Brake"
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite3D:frame")
+tracks/0/interp = 0
+tracks/0/loop_wrap = false
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 114 ]
+}
+
+[sub_resource type="Animation" id=3]
 length = 0.001
 tracks/0/type = "value"
 tracks/0/path = NodePath("Sprite3D:frame")
@@ -23,8 +37,7 @@ tracks/0/keys = {
 "values": [ 63 ]
 }
 
-[sub_resource type="Animation" id=3]
-resource_name = "DashJumpReverse"
+[sub_resource type="Animation" id=4]
 length = 0.001
 tracks/0/type = "value"
 tracks/0/path = NodePath("Sprite3D:frame")
@@ -39,7 +52,7 @@ tracks/0/keys = {
 "values": [ 64 ]
 }
 
-[sub_resource type="Animation" id=4]
+[sub_resource type="Animation" id=5]
 length = 0.2
 step = 0.01
 tracks/0/type = "value"
@@ -55,8 +68,7 @@ tracks/0/keys = {
 "values": [ 112, 60 ]
 }
 
-[sub_resource type="Animation" id=5]
-resource_name = "DashLandReverse"
+[sub_resource type="Animation" id=6]
 length = 0.2
 step = 0.05
 tracks/0/type = "value"
@@ -72,7 +84,7 @@ tracks/0/keys = {
 "values": [ 111, 60 ]
 }
 
-[sub_resource type="Animation" id=6]
+[sub_resource type="Animation" id=7]
 length = 0.14
 step = 0.01
 tracks/0/type = "value"
@@ -88,7 +100,7 @@ tracks/0/keys = {
 "values": [ 60, 61, 62 ]
 }
 
-[sub_resource type="Animation" id=7]
+[sub_resource type="Animation" id=8]
 length = 1.5
 loop = true
 tracks/0/type = "value"
@@ -104,7 +116,7 @@ tracks/0/keys = {
 "values": [ 120, 121, 122, 121, 122 ]
 }
 
-[sub_resource type="Animation" id=8]
+[sub_resource type="Animation" id=9]
 length = 0.8
 loop = true
 step = 0.2
@@ -121,7 +133,7 @@ tracks/0/keys = {
 "values": [ 0, 1, 2, 3 ]
 }
 
-[sub_resource type="Animation" id=9]
+[sub_resource type="Animation" id=10]
 length = 0.8
 loop = true
 tracks/0/type = "value"
@@ -137,7 +149,7 @@ tracks/0/keys = {
 "values": [ 20, 21, 22, 21 ]
 }
 
-[sub_resource type="Animation" id=10]
+[sub_resource type="Animation" id=11]
 length = 1.2
 loop = true
 tracks/0/type = "value"
@@ -153,7 +165,7 @@ tracks/0/keys = {
 "values": [ 4, 5, 6, 7, 6, 5 ]
 }
 
-[sub_resource type="SpatialMaterial" id=11]
+[sub_resource type="SpatialMaterial" id=12]
 flags_transparent = true
 flags_unshaded = true
 params_billboard_mode = 1
@@ -166,23 +178,24 @@ transform = Transform( 1, 0, 0, 0, -4.37114e-008, -1, 0, 1, -4.37114e-008, 0, 0.
 shape = SubResource( 1 )
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-anims/DashJump = SubResource( 2 )
-anims/DashJumpReverse = SubResource( 3 )
-anims/DashLand = SubResource( 4 )
-anims/DashLandReverse = SubResource( 5 )
-anims/Jump = SubResource( 6 )
-anims/Pain = SubResource( 7 )
-anims/Rest = SubResource( 8 )
-anims/Run = SubResource( 9 )
-anims/Walk = SubResource( 10 )
+anims/Brake = SubResource( 2 )
+anims/DashJump = SubResource( 3 )
+anims/DashJumpReverse = SubResource( 4 )
+anims/DashLand = SubResource( 5 )
+anims/DashLandReverse = SubResource( 6 )
+anims/Jump = SubResource( 7 )
+anims/Pain = SubResource( 8 )
+anims/Rest = SubResource( 9 )
+anims/Run = SubResource( 10 )
+anims/Walk = SubResource( 11 )
 
 [node name="Sprite3D" type="Sprite3D" parent="."]
-material_override = SubResource( 11 )
+material_override = SubResource( 12 )
 offset = Vector2( -4, 80 )
 texture = ExtResource( 2 )
 vframes = 14
 hframes = 10
-frame = 60
+frame = 114
 
 [node name="CameraAnchor" type="Position3D" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 18, 30 )
