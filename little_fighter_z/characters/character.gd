@@ -37,19 +37,22 @@ func _init():
 	for state_obj in states:
 		state_obj.chr = self
 
+func _process(delta : float) -> void:
+	states[state]._process(delta)
+
 func _physics_process(delta : float) -> void:
 	states[state]._physics_process(delta)
 	
 func _animation_finished(anim_name : String) -> void:
 	states[state]._animation_finished(anim_name)
 
-func scalar_direction(direction : Vector3) -> float:
-	if direction.x == 0 and direction.z == 0:
-		return 0.0
-	return direction.dot(global_transform.basis.xform_inv(Vector3.RIGHT))
+func to_local_basis(vector : Vector3) -> Vector3:
+	return global_transform.basis.xform(vector)
+
+func to_global_basis(vector : Vector3) -> Vector3:
+	return global_transform.basis.xform_inv(vector)
 	
-func set_sprite_direction(direction : Vector3) -> void:
-	var scalar_direction := scalar_direction(direction)
+func set_sprite_direction(scalar_direction : float) -> void:
 	if scalar_direction != 0:
 		sprite_3d.flip_h = scalar_direction < 0
 	
@@ -138,6 +141,8 @@ class BaseState:
 	var chr : Character
 	func _transition_setup(param) -> void:
 		pass
+	func _process(delta : float) -> void:
+		pass
 	func _physics_process(delta : float) -> void:
 		pass
 	func _animation_finished(anim_name : String) -> void:
@@ -180,43 +185,32 @@ class WalkState extends BaseState:
 			chr.animation_player.play("Rest")
 		else:
 			chr.animation_player.play("Walk")
-			chr.velocity = chr.move_and_slide(chr.control_direction * chr.walk_speed, Vector3.UP)
-		var scalar_control_direction := chr.scalar_direction(chr.control_direction)
-		if scalar_control_direction != 0:
-				chr.sprite_3d.flip_h = scalar_control_direction < 0
+			chr.velocity = chr.move_and_slide(chr.to_global_basis(chr.control_direction) * chr.walk_speed, Vector3.UP)
+		chr.set_sprite_direction(chr.control_direction.x)
 	
 	func _run(dir : int) -> void:
-		chr.transition(RUN_STATE, dir)
+		chr.transition(RUN_STATE, chr.control_direction)
 		
 	func _jump() -> void:
 		chr.transition(JUMP_STATE)
 
 class RunState extends BaseState:
 	
-	func _transition_setup(dir : int) -> void:
-		match dir:
-			LEFT_DIR:
-				chr.velocity = chr.global_transform.basis.xform_inv(Vector3.LEFT)
-			RIGHT_DIR:
-				chr.velocity = chr.global_transform.basis.xform_inv(Vector3.RIGHT)
-			UP_DIR:
-				chr.velocity = chr.global_transform.basis.xform_inv(Vector3.FORWARD)
-			DOWN_DIR:
-				chr.velocity = chr.global_transform.basis.xform_inv(Vector3.BACK)
+	func _transition_setup(direction_vector : Vector3) -> void:
+		chr.velocity = chr.to_global_basis(direction_vector)
 		chr.animation_player.play("Run")
-		chr.set_sprite_direction(chr.velocity)
+		chr.set_sprite_direction(direction_vector.x)
 		
 	func _physics_process(delta : float) -> void:
 		if chr.classic_mode:
-			chr.velocity = chr.velocity.project(chr.global_transform.basis.xform_inv(Vector3.RIGHT)).normalized()
-			chr.velocity = chr.move_and_slide((chr.velocity + 0.99 * chr.control_direction).normalized() * chr.run_speed, Vector3.UP)
+			chr.velocity = chr.velocity.project(chr.to_global_basis(Vector3.RIGHT)).normalized()
+			chr.velocity = chr.move_and_slide((chr.velocity + 0.99 * chr.to_global_basis(chr.control_direction)).normalized() * chr.run_speed, Vector3.UP)
 		else:
-			chr.velocity = chr.move_and_slide((chr.velocity + chr.run_curve * chr.control_direction).normalized() * chr.run_speed, Vector3.UP)
-			chr.set_sprite_direction(chr.velocity)
+			chr.velocity = chr.move_and_slide((chr.velocity + chr.run_curve * chr.to_global_basis(chr.control_direction)).normalized() * chr.run_speed, Vector3.UP)
+			chr.set_sprite_direction(chr.local_transform(chr.velocity).dot(Vector3.RIGHT))
 			
 	func _move(dir : int) -> void:
-		print(chr.velocity, chr.control_direction)
-		if chr.velocity.dot(chr.global_transform.basis.xform_inv(chr.control_direction)) < 0:
+		if chr.velocity.dot(chr.to_global_basis(chr.control_direction)) < 0:
 			chr.transition(WALK_STATE)
 						
 	func _jump() -> void:
@@ -235,14 +229,14 @@ class JumpState extends BaseState:
 		if chr.is_on_floor() and not chr.animation_player.is_playing():
 			chr.velocity = Vector3.ZERO
 			chr.animation_player.play_backwards("Jump")
-		chr.set_sprite_direction(chr.control_direction)
+		chr.set_sprite_direction(chr.control_direction.x)
 		
 	func _animation_finished(anim_name : String) -> void:
 		if anim_name != "Jump":
 			return
 		if chr.animation_player.current_animation_position > 0: 
 			chr.velocity.y = 0
-			chr.velocity = chr.control_direction * chr.jump_velocity.x
+			chr.velocity = chr.to_global_basis(chr.control_direction) * chr.jump_velocity.x
 			chr.velocity.y = chr.jump_velocity.y
 		else:
 			if double_jump.y > 0:
@@ -256,7 +250,7 @@ class JumpState extends BaseState:
 			if chr.control_direction.x == 0 and chr.control_direction.z == 0 :
 				double_jump = chr.velocity
 			else:
-				double_jump = chr.control_direction
+				double_jump = chr.to_global_basis(chr.control_direction)
 		if abs(double_jump.x) > 0.01 or (not chr.classic_mode and abs(double_jump.z) > 0.01):
 			double_jump.y = 1
 				
@@ -266,27 +260,22 @@ class DashState extends BaseState:
 		dir_vector.y = 0
 		chr.velocity = dir_vector.normalized() * chr.dash_velocity.x
 		chr.velocity.y = chr.dash_velocity.y
-		chr.animation_player.play("DashJump")
 		
 	func _physics_process(delta : float) -> void:
 		chr.velocity.y += chr.gravity * delta
 		chr.velocity = chr.move_and_slide(chr.velocity, Vector3.UP)
 		if chr.is_on_floor():
+			print(chr.animation_player.assigned_animation)
 			chr.transition(WALK_STATE)
-		var scalar_control_direction := chr.scalar_direction(chr.control_direction)
-		var scalar_velocity_direction := chr.scalar_direction(chr.velocity)
+		chr.set_sprite_direction(chr.control_direction.x)
+		var reverse := chr.sprite_3d.flip_h != (chr.to_local_basis(chr.velocity).dot(Vector3.RIGHT) < 0)
 		if (chr.velocity.y + 0.5 * chr.gravity * chr.dash_land_duration) * chr.dash_land_duration + chr.translation.y < 0:
-			if chr.animation_player.assigned_animation.match("*Reverse"):
+			if reverse:
 				chr.animation_player.play("DashLandReverse")
 			else:
 				chr.animation_player.play("DashLand")
-		elif scalar_control_direction != 0:
-			if scalar_velocity_direction == 0:
-				chr.sprite_3d.flip_h = scalar_control_direction < 0
+		else:
+			if reverse:
+				chr.animation_player.play("DashJumpReverse")
 			else:
-				if (scalar_control_direction < 0) != (scalar_velocity_direction < 0):
-					chr.sprite_3d.flip_h = scalar_control_direction < 0
-					chr.animation_player.play("DashJumpReverse")
-				else:
-					chr.sprite_3d.flip_h = scalar_velocity_direction < 0
-					chr.animation_player.play("DashJump")
+				chr.animation_player.play("DashJump")
