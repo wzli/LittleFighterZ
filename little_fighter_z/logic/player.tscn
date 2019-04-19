@@ -9,4 +9,8 @@ script = ExtResource( 1 )
 wait_time = 0.3
 one_shot = true
 
+[node name="InterpolatedCamera" type="InterpolatedCamera" parent="."]
+fov = 15.0
+enabled = true
+
 [connection signal="timeout" from="ComboTimer" to="." method="_on_ComboTimer_timeout"]

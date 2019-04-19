@@ -14,6 +14,8 @@ export(float) var double_jump_time_window : float = 0.2
 export(float) var gravity : float = -30
 export(bool) var side_scroll_mode : bool = false
 
+
+onready var camera_anchor := $CameraAnchor as Position3D
 onready var sprite_3d := $Sprite3D as Sprite3D
 onready var animation_player := $AnimationPlayer as AnimationPlayer
 onready var dash_land_duration := animation_player.get_animation("DashLand").length
@@ -36,6 +38,9 @@ func transition(new_state : int, param = null) -> void:
 func _init():
 	for state_obj in states:
 		state_obj.chr = self
+		
+func _ready() -> void:
+	camera_anchor.look_at(self.translation, Vector3.UP)
 
 func _process(delta : float) -> void:
 	states[state]._process(delta)
@@ -47,10 +52,10 @@ func _animation_finished(anim_name : String) -> void:
 	states[state]._animation_finished(anim_name)
 
 func to_local_basis(vector : Vector3) -> Vector3:
-	return global_transform.basis.xform(vector)
+	return global_transform.basis.xform_inv(vector)
 
 func to_global_basis(vector : Vector3) -> Vector3:
-	return global_transform.basis.xform_inv(vector)
+	return global_transform.basis.xform(vector)
 	
 func set_sprite_direction(scalar_direction : float) -> void:
 	if scalar_direction != 0:
@@ -266,7 +271,6 @@ class DashState extends BaseState:
 		chr.velocity.y += chr.gravity * delta
 		chr.velocity = chr.move_and_slide(chr.velocity, Vector3.UP)
 		if chr.is_on_floor():
-			print(chr.animation_player.assigned_animation)
 			chr.transition(WALK_STATE)
 		chr.set_sprite_direction(chr.control_direction.x)
 		var reverse := chr.sprite_3d.flip_h != (chr.to_local_basis(chr.velocity).dot(Vector3.RIGHT) < 0)

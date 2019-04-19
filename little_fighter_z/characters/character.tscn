@@ -184,4 +184,7 @@ vframes = 14
 hframes = 10
 frame = 60
 
+[node name="CameraAnchor" type="Position3D" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 18, 30 )
+
 [connection signal="animation_finished" from="AnimationPlayer" to="." method="_animation_finished"]

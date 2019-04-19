@@ -2,17 +2,19 @@ extends Node
 
 export(int) var input_id := 0
 export(PackedScene) var character_scene := preload("res://characters/character.tscn")
+export(float) var rotation_speed := 0.01
 export(bool) var print_combo := false
 
 onready var character := character_scene.instance() as Character
 onready var combo_timer := $ComboTimer as Timer
+onready var camera := $InterpolatedCamera as InterpolatedCamera
 
 enum ComboKey {NONE, UP, DOWN, LEFT, RIGHT, ATTACK, DEFEND, JUMP}
 var combo_code : int = ComboKey.NONE
 var combo : String = '____'
 
 func _ready(): 
-	add_child(character)
+	set_character(character_scene)
 
 func _physics_process(delta : float):
 	set_control_direction(Input)
@@ -37,10 +39,13 @@ func _on_ComboTimer_timeout():
 func set_character(new_character_scene : PackedScene) -> void:
 	var new_character := new_character_scene.instance() as Character
 	assert(new_character)
-	character.queue_free()
+	if character:
+		character.queue_free()
 	character = new_character
 	character_scene = new_character_scene
 	add_child(character)
+	camera.transform = character.camera_anchor.transform
+	camera.set_target(character.camera_anchor)
 	
 func set_control_direction(input_event) -> void:
 	character.control_direction = Vector3.ZERO
@@ -53,6 +58,11 @@ func set_control_direction(input_event) -> void:
 	elif input_event.is_action_pressed(str(input_id) + "_down"):
 		character.control_direction.z += 1
 	character.control_direction = character.control_direction.normalized()
+	if not character.side_scroll_mode:
+		if input_event.is_action_pressed(str(input_id) + "_ccw"):
+			character.rotate_y(0.01)
+		elif input_event.is_action_pressed(str(input_id) + "_cw"):
+			character.rotate_y(-0.01)
 
 func parse_combo_key(event : InputEventKey) -> int:
 	if event.is_action_pressed(str(input_id) + "_attack"):
