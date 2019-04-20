@@ -4,7 +4,7 @@ class_name Character
 enum {UP_DIR, DOWN_DIR, LEFT_DIR, RIGHT_DIR}
 
 onready var sprite_3d := $Sprite3D as Sprite3D
-onready var animations := $Animations as AnimationPlayer
+onready var animation_player := $AnimationPlayer as AnimationPlayer
 
 var velocity := Vector3()
 var control_direction := Vector3()

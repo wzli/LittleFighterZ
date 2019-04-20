@@ -52,6 +52,7 @@ func set_character(new_character_scene : PackedScene) -> void:
 	camera.transform = camera_anchor.transform
 	character.add_child(camera_anchor)
 	camera.set_target(camera_anchor)
+
 	
 func set_control_direction(input_event) -> void:
 	character.control_direction = Vector3.ZERO

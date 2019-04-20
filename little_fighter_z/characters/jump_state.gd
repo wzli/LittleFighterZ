@@ -3,13 +3,15 @@ extends BaseState
 export(Vector2) var velocity := Vector2(4, 11)
 export(float) var chain_time_window : float = 0.2
 
+export(String) var animation := "Jump"
+
 const MIN_CHAIN_SPEED := 0.01
 var chain_velocity := Vector3()
 
 func transition() -> void:
 	chr.velocity = Vector3.ZERO
 	chain_velocity = Vector3.ZERO
-	chr.animations.play("Jump")
+	chr.animation_player.play(animation)
 	chr.state = self
 	
 func set_chain_direction(vertical_direction : float) -> bool:
@@ -29,17 +31,17 @@ func _physics_process_state(delta : float) -> void:
 	chr.velocity.y += Config.gravity * delta
 	chr.velocity = chr.move_and_slide(chr.velocity, Vector3.UP)
 	chr.set_sprite_direction(chr.control_direction.x)
-	if chr.is_on_floor() and not chr.animations.is_playing():
+	if chr.is_on_floor() and not chr.animation_player.is_playing():
 		if chain_velocity.y > 0:
 			chr.dash_state.transition(chain_velocity)
 		elif chain_velocity.y < 0:
 			chr.roll_state.transition(chain_velocity)
 		else:
 			chr.velocity = Vector3.ZERO
-			chr.animations.play_backwards("Jump")
+			chr.animation_player.play_backwards(animation)
 
 func _animation_finished(anim_name : String) -> void:
-	if chr.animations.current_animation_position > 0: 
+	if chr.animation_player.current_animation_position > 0: 
 		chr.velocity.y = 0
 		chr.velocity = chr.to_global_basis(chr.control_direction) * velocity.x
 		chr.velocity.y = velocity.y
