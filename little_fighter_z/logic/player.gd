@@ -65,10 +65,10 @@ func set_control_direction(input_event) -> void:
 		character.control_direction.z += 1
 	character.control_direction = character.control_direction.normalized()
 	if not Config.side_scroll_mode:
-		if input_event.is_action_pressed(str(input_id) + "_ccw"):
-			character.rotate_y(0.01)
-		elif input_event.is_action_pressed(str(input_id) + "_cw"):
-			character.rotate_y(-0.01)
+		if input_event.is_action_pressed(str(input_id) + "_cw"):
+			character.rotate_y(rotation_speed)
+		elif input_event.is_action_pressed(str(input_id) + "_ccw"):
+			character.rotate_y(-rotation_speed)
 
 func parse_combo_key(event : InputEventKey) -> int:
 	if event.is_action_pressed(str(input_id) + "_attack"):

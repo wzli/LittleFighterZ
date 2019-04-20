@@ -3,9 +3,8 @@ class_name Character
 
 enum {UP_DIR, DOWN_DIR, LEFT_DIR, RIGHT_DIR}
 
-onready var camera_anchor := $CameraAnchor as Position3D
 onready var sprite_3d := $Sprite3D as Sprite3D
-onready var animation_player := $AnimationPlayer as AnimationPlayer
+onready var animations := $Animations as AnimationPlayer
 
 var velocity := Vector3()
 var control_direction := Vector3()
@@ -14,6 +13,7 @@ onready var walk_state := $WalkState
 onready var run_state := $RunState
 onready var jump_state := $JumpState
 onready var dash_state = $DashState
+onready var roll_state = $RollState
 onready var state :=  walk_state
 
 func _process(delta : float) -> void:
@@ -34,7 +34,14 @@ func to_global_basis(vector : Vector3) -> Vector3:
 func set_sprite_direction(scalar_direction : float) -> void:
 	if scalar_direction != 0:
 		sprite_3d.flip_h = scalar_direction < 0
-	
+		
+func apply_brake_impulse(impulse : float) -> bool:
+	var new_velocity := velocity - velocity.normalized() * impulse
+	if velocity.dot(new_velocity) > 0:
+		velocity = new_velocity
+		return false
+	return true
+		
 func input_combo(combo : String) -> void:
 	if combo[1] == 'D':
 		if Config.side_scroll_mode:

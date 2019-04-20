@@ -1,0 +1,23 @@
+extends BaseState
+
+export(float) var speed : float = 4
+export(float) var duration : float = 0.4
+export(float) var brake : float = 60
+
+var elapsed_time : float
+
+func transition(global_direction_vector : Vector3) -> void:
+	elapsed_time = 0
+	global_direction_vector.y = 0
+	chr.velocity = global_direction_vector.normalized() * speed
+	chr.set_sprite_direction(chr.to_local_basis(global_direction_vector).x)
+	chr.animations.play("Roll")
+	chr.state = self
+	
+func _physics_process_state(delta : float) -> void:
+	chr.velocity = chr.move_and_slide(chr.velocity, Vector3.UP)
+	elapsed_time += delta
+	if elapsed_time > duration:
+		chr.animations.play("DashBrake")
+		if chr.apply_brake_impulse(brake * delta):
+			chr.walk_state.transition()
