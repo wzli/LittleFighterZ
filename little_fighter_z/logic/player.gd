@@ -2,6 +2,7 @@ extends Node
 
 export(int) var input_id := 0
 export(PackedScene) var character_scene := preload("res://characters/character.tscn")
+export(Vector3) var camera_offset := Vector3(0, 18, 30)
 export(float) var rotation_speed := 0.01
 export(bool) var print_combo := false
 
@@ -37,6 +38,7 @@ func _on_ComboTimer_timeout():
 	combo_code = ComboKey.NONE
 
 func set_character(new_character_scene : PackedScene) -> void:
+	# create and add the new character
 	var new_character := new_character_scene.instance() as Character
 	assert(new_character)
 	if character:
@@ -44,8 +46,12 @@ func set_character(new_character_scene : PackedScene) -> void:
 	character = new_character
 	character_scene = new_character_scene
 	add_child(character)
-	camera.transform = character.camera_anchor.transform
-	camera.set_target(character.camera_anchor)
+	# create a camera anchor for the character
+	var camera_anchor := Position3D.new()
+	camera_anchor.look_at_from_position(camera_offset, Vector3.ZERO, Vector3.UP)
+	camera.transform = camera_anchor.transform
+	character.add_child(camera_anchor)
+	camera.set_target(camera_anchor)
 	
 func set_control_direction(input_event) -> void:
 	character.control_direction = Vector3.ZERO
@@ -58,7 +64,7 @@ func set_control_direction(input_event) -> void:
 	elif input_event.is_action_pressed(str(input_id) + "_down"):
 		character.control_direction.z += 1
 	character.control_direction = character.control_direction.normalized()
-	if not character.side_scroll_mode:
+	if not Config.side_scroll_mode:
 		if input_event.is_action_pressed(str(input_id) + "_ccw"):
 			character.rotate_y(0.01)
 		elif input_event.is_action_pressed(str(input_id) + "_cw"):

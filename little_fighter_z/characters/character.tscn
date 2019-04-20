@@ -11,7 +11,12 @@
 radius = 0.4
 height = 0.4
 
-[sub_resource type="Animation" id=3]
+[sub_resource type="SpatialMaterial" id=13]
+flags_transparent = true
+flags_unshaded = true
+params_billboard_mode = 1
+
+[sub_resource type="Animation" id=2]
 resource_name = "Dash"
 length = 0.001
 tracks/0/type = "value"
@@ -27,7 +32,7 @@ tracks/0/keys = {
 "values": [ 63 ]
 }
 
-[sub_resource type="Animation" id=4]
+[sub_resource type="Animation" id=3]
 resource_name = "DashBack"
 length = 0.001
 tracks/0/type = "value"
@@ -43,7 +48,7 @@ tracks/0/keys = {
 "values": [ 64 ]
 }
 
-[sub_resource type="Animation" id=13]
+[sub_resource type="Animation" id=4]
 resource_name = "DashBrake"
 tracks/0/type = "value"
 tracks/0/path = NodePath("Sprite3D:frame")
@@ -152,8 +157,7 @@ tracks/0/keys = {
 "values": [ 20, 21, 22, 21 ]
 }
 
-[sub_resource type="Animation" id=2]
-resource_name = "RunBrake"
+[sub_resource type="Animation" id=11]
 tracks/0/type = "value"
 tracks/0/path = NodePath("Sprite3D:frame")
 tracks/0/interp = 0
@@ -167,7 +171,7 @@ tracks/0/keys = {
 "values": [ 114 ]
 }
 
-[sub_resource type="Animation" id=11]
+[sub_resource type="Animation" id=12]
 length = 1.2
 loop = true
 tracks/0/type = "value"
@@ -183,11 +187,6 @@ tracks/0/keys = {
 "values": [ 4, 5, 6, 7, 6, 5 ]
 }
 
-[sub_resource type="SpatialMaterial" id=12]
-flags_transparent = true
-flags_unshaded = true
-params_billboard_mode = 1
-
 [node name="Character" type="KinematicBody"]
 script = ExtResource( 1 )
 
@@ -195,29 +194,25 @@ script = ExtResource( 1 )
 transform = Transform( 1, 0, 0, 0, -4.37114e-008, -1, 0, 1, -4.37114e-008, 0, 0.6, 0 )
 shape = SubResource( 1 )
 
+[node name="Sprite3D" type="Sprite3D" parent="."]
+material_override = SubResource( 13 )
+offset = Vector2( -4, 80 )
+texture = ExtResource( 2 )
+vframes = 14
+hframes = 10
+
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-anims/Dash = SubResource( 3 )
-anims/DashBack = SubResource( 4 )
-anims/DashBrake = SubResource( 13 )
+anims/Dash = SubResource( 2 )
+anims/DashBack = SubResource( 3 )
+anims/DashBrake = SubResource( 4 )
 anims/DashLand = SubResource( 5 )
 anims/DashLandBack = SubResource( 6 )
 anims/Jump = SubResource( 7 )
 anims/Pain = SubResource( 8 )
 anims/Rest = SubResource( 9 )
 anims/Run = SubResource( 10 )
-anims/RunBrake = SubResource( 2 )
-anims/Walk = SubResource( 11 )
-
-[node name="Sprite3D" type="Sprite3D" parent="."]
-material_override = SubResource( 12 )
-offset = Vector2( -4, 80 )
-texture = ExtResource( 2 )
-vframes = 14
-hframes = 10
-frame = 60
-
-[node name="CameraAnchor" type="Position3D" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 18, 30 )
+anims/RunBrake = SubResource( 11 )
+anims/Walk = SubResource( 12 )
 
 [node name="WalkState" type="Node" parent="."]
 script = ExtResource( 3 )

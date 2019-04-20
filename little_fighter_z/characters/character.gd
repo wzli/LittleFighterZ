@@ -1,10 +1,6 @@
 extends KinematicBody
 class_name Character
 
-#To do: move to globals
-export(float) var gravity : float = -30
-export(bool) var side_scroll_mode : bool = false
-
 enum {UP_DIR, DOWN_DIR, LEFT_DIR, RIGHT_DIR}
 
 onready var camera_anchor := $CameraAnchor as Position3D
@@ -19,9 +15,6 @@ onready var run_state := $RunState
 onready var jump_state := $JumpState
 onready var dash_state = $DashState
 onready var state :=  walk_state
-
-func _ready() -> void:
-	camera_anchor.look_at(self.translation, Vector3.UP)
 
 func _process(delta : float) -> void:
 	state._process_state(delta)
@@ -44,7 +37,7 @@ func set_sprite_direction(scalar_direction : float) -> void:
 	
 func input_combo(combo : String) -> void:
 	if combo[1] == 'D':
-		if side_scroll_mode:
+		if Config.side_scroll_mode:
 			match combo.right(2):
 				'JA', 'AJ':
 					state._defend_attack_jump_combo()
@@ -98,9 +91,9 @@ func input_combo(combo : String) -> void:
 					state._side_jump_combo(RIGHT_DIR)
 	elif state._custom_combo(combo):
 		pass
-	elif not side_scroll_mode and combo.match('*^^'):
+	elif not Config.side_scroll_mode and combo.match('*^^'):
 		state._run(UP_DIR)
-	elif not side_scroll_mode and combo.match('*vv'):
+	elif not Config.side_scroll_mode and combo.match('*vv'):
 		state._run(DOWN_DIR)
 	elif combo.match('*<<'):
 		state._run(LEFT_DIR)
