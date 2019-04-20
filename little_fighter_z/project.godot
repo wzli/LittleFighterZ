@@ -9,12 +9,18 @@
 config_version=4
 
 _global_script_classes=[ {
+"base": "Node",
+"class": "BaseState",
+"language": "GDScript",
+"path": "res://characters/base_state.gd"
+}, {
 "base": "KinematicBody",
 "class": "Character",
 "language": "GDScript",
 "path": "res://characters/character.gd"
 } ]
 _global_script_class_icons={
+"BaseState": "",
 "Character": ""
 }
 

@@ -1,13 +1,17 @@
-[gd_scene load_steps=15 format=2]
+[gd_scene load_steps=19 format=2]
 
 [ext_resource path="res://characters/character.gd" type="Script" id=1]
 [ext_resource path="res://characters/spritesheet.png" type="Texture" id=2]
+[ext_resource path="res://characters/walk_state.gd" type="Script" id=3]
+[ext_resource path="res://characters/run_state.gd" type="Script" id=4]
+[ext_resource path="res://characters/jump_state.gd" type="Script" id=5]
+[ext_resource path="res://characters/dash_state.gd" type="Script" id=6]
 
 [sub_resource type="CapsuleShape" id=1]
 radius = 0.4
 height = 0.4
 
-[sub_resource type="Animation" id=2]
+[sub_resource type="Animation" id=13]
 resource_name = "Brake"
 tracks/0/type = "value"
 tracks/0/path = NodePath("Sprite3D:frame")
@@ -22,7 +26,7 @@ tracks/0/keys = {
 "values": [ 114 ]
 }
 
-[sub_resource type="Animation" id=3]
+[sub_resource type="Animation" id=14]
 length = 0.001
 tracks/0/type = "value"
 tracks/0/path = NodePath("Sprite3D:frame")
@@ -37,7 +41,7 @@ tracks/0/keys = {
 "values": [ 63 ]
 }
 
-[sub_resource type="Animation" id=4]
+[sub_resource type="Animation" id=15]
 length = 0.001
 tracks/0/type = "value"
 tracks/0/path = NodePath("Sprite3D:frame")
@@ -52,7 +56,7 @@ tracks/0/keys = {
 "values": [ 64 ]
 }
 
-[sub_resource type="Animation" id=5]
+[sub_resource type="Animation" id=16]
 length = 0.2
 step = 0.01
 tracks/0/type = "value"
@@ -68,7 +72,7 @@ tracks/0/keys = {
 "values": [ 112, 60 ]
 }
 
-[sub_resource type="Animation" id=6]
+[sub_resource type="Animation" id=17]
 length = 0.2
 step = 0.05
 tracks/0/type = "value"
@@ -84,7 +88,7 @@ tracks/0/keys = {
 "values": [ 111, 60 ]
 }
 
-[sub_resource type="Animation" id=7]
+[sub_resource type="Animation" id=18]
 length = 0.14
 step = 0.01
 tracks/0/type = "value"
@@ -100,7 +104,7 @@ tracks/0/keys = {
 "values": [ 60, 61, 62 ]
 }
 
-[sub_resource type="Animation" id=8]
+[sub_resource type="Animation" id=19]
 length = 1.5
 loop = true
 tracks/0/type = "value"
@@ -116,7 +120,7 @@ tracks/0/keys = {
 "values": [ 120, 121, 122, 121, 122 ]
 }
 
-[sub_resource type="Animation" id=9]
+[sub_resource type="Animation" id=20]
 length = 0.8
 loop = true
 step = 0.2
@@ -133,7 +137,7 @@ tracks/0/keys = {
 "values": [ 0, 1, 2, 3 ]
 }
 
-[sub_resource type="Animation" id=10]
+[sub_resource type="Animation" id=21]
 length = 0.8
 loop = true
 tracks/0/type = "value"
@@ -149,7 +153,7 @@ tracks/0/keys = {
 "values": [ 20, 21, 22, 21 ]
 }
 
-[sub_resource type="Animation" id=11]
+[sub_resource type="Animation" id=22]
 length = 1.2
 loop = true
 tracks/0/type = "value"
@@ -178,16 +182,16 @@ transform = Transform( 1, 0, 0, 0, -4.37114e-008, -1, 0, 1, -4.37114e-008, 0, 0.
 shape = SubResource( 1 )
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-anims/Brake = SubResource( 2 )
-anims/DashJump = SubResource( 3 )
-anims/DashJumpReverse = SubResource( 4 )
-anims/DashLand = SubResource( 5 )
-anims/DashLandReverse = SubResource( 6 )
-anims/Jump = SubResource( 7 )
-anims/Pain = SubResource( 8 )
-anims/Rest = SubResource( 9 )
-anims/Run = SubResource( 10 )
-anims/Walk = SubResource( 11 )
+anims/Brake = SubResource( 13 )
+anims/DashJump = SubResource( 14 )
+anims/DashJumpReverse = SubResource( 15 )
+anims/DashLand = SubResource( 16 )
+anims/DashLandReverse = SubResource( 17 )
+anims/Jump = SubResource( 18 )
+anims/Pain = SubResource( 19 )
+anims/Rest = SubResource( 20 )
+anims/Run = SubResource( 21 )
+anims/Walk = SubResource( 22 )
 
 [node name="Sprite3D" type="Sprite3D" parent="."]
 material_override = SubResource( 12 )
@@ -195,9 +199,21 @@ offset = Vector2( -4, 80 )
 texture = ExtResource( 2 )
 vframes = 14
 hframes = 10
-frame = 114
+frame = 60
 
 [node name="CameraAnchor" type="Position3D" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 18, 30 )
+
+[node name="WalkState" type="Node" parent="."]
+script = ExtResource( 3 )
+
+[node name="RunState" type="Node" parent="."]
+script = ExtResource( 4 )
+
+[node name="JumpState" type="Node" parent="."]
+script = ExtResource( 5 )
+
+[node name="DashState" type="Node" parent="."]
+script = ExtResource( 6 )
 
 [connection signal="animation_finished" from="AnimationPlayer" to="." method="_animation_finished"]
