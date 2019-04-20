@@ -11,6 +11,7 @@ one_shot = true
 
 [node name="InterpolatedCamera" type="InterpolatedCamera" parent="."]
 fov = 15.0
+speed = 5.0
 enabled = true
 
 [connection signal="timeout" from="ComboTimer" to="." method="_on_ComboTimer_timeout"]

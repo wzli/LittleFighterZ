@@ -2,19 +2,18 @@ extends KinematicBody
 class_name Character
 
 #To do: move to globals
-
 export(float) var gravity : float = -30
 export(bool) var side_scroll_mode : bool = false
+
+enum {UP_DIR, DOWN_DIR, LEFT_DIR, RIGHT_DIR}
 
 onready var camera_anchor := $CameraAnchor as Position3D
 onready var sprite_3d := $Sprite3D as Sprite3D
 onready var animation_player := $AnimationPlayer as AnimationPlayer
-onready var dash_land_duration := animation_player.get_animation("DashLand").length
 
 var velocity := Vector3()
 var control_direction := Vector3()
 
-enum {UP_DIR, DOWN_DIR, LEFT_DIR, RIGHT_DIR}
 onready var walk_state := $WalkState
 onready var run_state := $RunState
 onready var jump_state := $JumpState

@@ -13,10 +13,10 @@ func transition(direction_vector : Vector3) -> void:
 	chr.state = self
 	
 func _physics_process_state(delta : float) -> void:
-	if chr.animation_player.assigned_animation == "Brake":
-		var new_velocity := chr.velocity - chr.velocity.normalized() * brake * delta
-		if new_velocity.dot(chr.velocity) > 0:
-			chr.velocity = chr.move_and_slide(new_velocity, Vector3.UP)
+	if chr.animation_player.assigned_animation == "RunBrake":
+		var new_speed := chr.velocity.distance_to(Vector3.ZERO) -  brake * delta
+		if new_speed > 0:
+			chr.velocity = chr.move_and_slide(chr.velocity.normalized() * new_speed, Vector3.UP)
 		else:
 			chr.walk_state.transition()
 	elif chr.side_scroll_mode:
@@ -28,8 +28,7 @@ func _physics_process_state(delta : float) -> void:
 		
 func _move(dir : int) -> void:
 	if chr.velocity.normalized().dot(chr.to_global_basis(chr.control_direction)) < -ONE_OVER_SQRT_TWO:
-		chr.animation_player.play("Brake")
-		print("brake")
+		chr.animation_player.play("RunBrake")
 					
 func _jump() -> void:
 	chr.dash_state.transition(chr.velocity)
